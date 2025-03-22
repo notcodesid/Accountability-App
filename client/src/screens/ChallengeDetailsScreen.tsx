@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import {
   View,
   Text,
@@ -9,592 +9,512 @@ import {
   ActivityIndicator,
   Alert
 } from 'react-native';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../types/navigation';
-import { useAuth } from '../contexts/AuthContext';
-import { FontAwesome5, MaterialIcons, Ionicons } from '@expo/vector-icons';
-import {
-  Challenge,
-  dummyChallenges,
-  calculateChallengeCompletion,
-  getUserChallengeProgress,
-  ProgressRecord
-} from '../services/dummyData';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RouteProp } from '@react-navigation/native';
+import { RootStackParamList } from '../types/navigationTypes';
+import { FontAwesome5, Ionicons } from '@expo/vector-icons';
+import { getChallenge, getUserProgress, joinChallenge, Challenge } from '../services/dummyData';
+import { AuthContext } from '../context/AuthContext';
+import GradientBackground from '../components/GradientBackground';
+import Card from '../components/Card';
+import Button from '../components/Button';
+import Badge from '../components/Badge';
+import { colors, spacing, components, shadows, borderRadius, fontSize } from '../config/theme';
+import { LinearGradient } from 'expo-linear-gradient';
 
-type ChallengeDetailsScreenProps = NativeStackScreenProps<RootStackParamList, 'ChallengeDetails'>;
+// Extended User interface to include wallet
+interface UserWithWallet {
+  id: string;
+  email: string;
+  name: string;
+  walletBalance?: number;
+}
 
-const ChallengeDetailsScreen = ({ route, navigation }: ChallengeDetailsScreenProps) => {
+type ChallengeDetailsScreenProps = {
+  navigation: StackNavigationProp<RootStackParamList, 'ChallengeDetails'>;
+  route: RouteProp<RootStackParamList, 'ChallengeDetails'>;
+};
+
+const ChallengeDetailsScreen: React.FC<ChallengeDetailsScreenProps> = ({ navigation, route }) => {
   const { challengeId } = route.params;
-  const { user } = useAuth();
-  const [challenge, setChallenge] = useState<Challenge | null>(null);
+  const { user } = useContext(AuthContext);
   const [loading, setLoading] = useState(true);
-  const [userProgress, setUserProgress] = useState<ProgressRecord[] | null>(null);
-  const [completionRate, setCompletionRate] = useState(0);
-  const [isParticipating, setIsParticipating] = useState(false);
-  const [isCreator, setIsCreator] = useState(false);
-  
-  useEffect(() => {
-    loadChallengeData();
-  }, [challengeId, user]);
-  
-  const loadChallengeData = () => {
-    if (!user) return;
-    
-    // Find the challenge in our dummy data
-    const foundChallenge = dummyChallenges.find(c => c.id === challengeId);
-    
-    if (foundChallenge) {
-      setChallenge(foundChallenge);
-      
-      // Check if user is participating in this challenge
-      const participating = foundChallenge.participants.some(p => p.userId === user.id);
-      setIsParticipating(participating);
-      
-      // Check if user is the creator
-      setIsCreator(foundChallenge.creatorId === user.id);
-      
-      // Get user progress if participating
-      if (participating) {
-        const progress = getUserChallengeProgress(user.id, challengeId);
-        setUserProgress(progress);
+  const [joining, setJoining] = useState(false);
+  const [challenge, setChallenge] = useState<Challenge | null>(null);
+  const [userProgress, setUserProgress] = useState<number>(0);
+  const [isParticipant, setIsParticipant] = useState(false);
+
+  // Cast user to extended type with wallet
+  const userWithWallet = user as UserWithWallet;
+
+  const loadData = async () => {
+    try {
+      const challengeData = await getChallenge(challengeId);
+      if (challengeData) {
+        setChallenge(challengeData);
         
-        // Calculate completion rate
-        const completion = calculateChallengeCompletion(user.id, challengeId);
-        setCompletionRate(completion);
-      }
-    }
-    
-    setLoading(false);
-  };
-  
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
-      weekday: 'short',
-      month: 'short', 
-      day: 'numeric',
-      year: 'numeric'
-    });
-  };
-  
-  const handleJoinChallenge = () => {
-    Alert.alert(
-      'Join Challenge',
-      `Join this challenge for $${challenge?.entryFee}?`,
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel'
-        },
-        {
-          text: 'Join',
-          onPress: () => {
-            // In a real app, this would call an API to join the challenge
-            Alert.alert('Success', 'You have joined the challenge successfully!');
-            setIsParticipating(true);
-          }
+        // Check if user is a participant
+        const userParticipating = challengeData.participants.some(
+          p => p.userId === (user?.id || 'currentUser')
+        );
+        setIsParticipant(userParticipating);
+        
+        if (userParticipating) {
+          const progress = await getUserProgress(challengeId);
+          setUserProgress(progress);
         }
-      ]
-    );
-  };
-  
-  const getGoalTypeIcon = (goalType: Challenge['goalType']) => {
-    switch (goalType) {
-      case 'STEPS':
-        return <FontAwesome5 name="walking" size={24} color="#4285F4" />;
-      case 'WORKOUTS':
-        return <FontAwesome5 name="dumbbell" size={24} color="#4285F4" />;
-      case 'MEDITATION':
-        return <FontAwesome5 name="spa" size={24} color="#4285F4" />;
-      case 'CUSTOM':
-        return <FontAwesome5 name="star" size={24} color="#4285F4" />;
-      default:
-        return <FontAwesome5 name="check" size={24} color="#4285F4" />;
+      } else {
+        Alert.alert('Error', 'Challenge not found');
+        navigation.goBack();
+      }
+    } catch (error) {
+      console.error('Error loading challenge details:', error);
+      Alert.alert('Error', 'Failed to load challenge details');
+    } finally {
+      setLoading(false);
     }
   };
-  
-  const getGoalTypeUnit = (goalType: Challenge['goalType']) => {
-    switch (goalType) {
-      case 'STEPS':
-        return 'steps';
-      case 'WORKOUTS':
-        return 'workouts';
-      case 'MEDITATION':
-        return 'minutes';
-      case 'CUSTOM':
-        return 'units';
-      default:
-        return 'units';
-    }
-  };
-  
-  const renderParticipants = () => {
-    if (!challenge) return null;
+
+  useEffect(() => {
+    loadData();
+  }, [challengeId, user?.id]);
+
+  const handleJoinChallenge = async () => {
+    if (!challenge) return;
     
-    return (
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Participants ({challenge.participants.length})</Text>
-        <ScrollView 
-          horizontal 
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.participantsList}
-        >
-          {challenge.participants.map(participant => (
-            <View key={participant.id} style={styles.participantItem}>
-              {participant.user.profilePic ? (
-                <Image 
-                  source={{ uri: participant.user.profilePic }} 
-                  style={styles.participantAvatar} 
-                />
-              ) : (
-                <View style={styles.participantAvatarPlaceholder}>
-                  <Text style={styles.participantAvatarText}>
-                    {participant.user.name.charAt(0).toUpperCase()}
-                  </Text>
-                </View>
-              )}
-              <Text style={styles.participantName} numberOfLines={1}>
-                {participant.user.name}
-              </Text>
-            </View>
-          ))}
-        </ScrollView>
-      </View>
-    );
+    // Check if user has sufficient funds
+    if (userWithWallet?.walletBalance !== undefined && userWithWallet.walletBalance < challenge.entryFee) {
+      Alert.alert(
+        "Insufficient Funds",
+        `You need at least $${challenge.entryFee} in your wallet to join this challenge. Your current balance is $${userWithWallet.walletBalance.toFixed(2)}.`,
+        [
+          { text: "Add Funds", onPress: () => (navigation as any).navigate('Wallet') },
+          { text: "Cancel", style: "cancel" }
+        ]
+      );
+      return;
+    }
+    
+    setJoining(true);
+    try {
+      await joinChallenge(challengeId);
+      Alert.alert(
+        "Successfully Joined Challenge!",
+        `$${challenge.entryFee} has been deducted from your wallet and added to the challenge pool.`,
+        [{ text: "OK" }]
+      );
+      // Reload data to update UI
+      await loadData();
+    } catch (error) {
+      console.error('Error joining challenge:', error);
+      Alert.alert('Error', 'Failed to join the challenge. Please try again later.');
+    } finally {
+      setJoining(false);
+    }
   };
-  
+
+  const handleRecordProgress = () => {
+    (navigation as any).navigate('RecordProgress', { challengeId });
+  };
+
+  const handleViewLeaderboard = () => {
+    (navigation as any).navigate('Leaderboard', { challengeId });
+  };
+
+  const handleViewProgress = () => {
+    (navigation as any).navigate('ProgressTracking', { challengeId });
+  };
+
+  const getGoalTypeText = (type: string, value: number) => {
+    switch (type) {
+      case 'steps':
+        return `${value.toLocaleString()} steps daily`;
+      case 'workout':
+        return `${value} minutes workout per session`;
+      case 'meditation':
+        return `${value} minutes meditation daily`;
+      case 'custom':
+      default:
+        return `${value} ${type}`;
+    }
+  };
+
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#4285F4" />
-        <Text style={styles.loadingText}>Loading challenge details...</Text>
-      </View>
+      <GradientBackground>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={styles.loadingText}>Loading challenge details...</Text>
+        </View>
+      </GradientBackground>
     );
   }
-  
+
   if (!challenge) {
     return (
-      <View style={styles.errorContainer}>
-        <MaterialIcons name="error-outline" size={48} color="#f44336" />
-        <Text style={styles.errorText}>Challenge not found</Text>
-        <TouchableOpacity 
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
-          <Text style={styles.backButtonText}>Go Back</Text>
-        </TouchableOpacity>
-      </View>
+      <GradientBackground>
+        <View style={styles.loadingContainer}>
+          <Text style={styles.errorText}>Challenge not found</Text>
+          <Button
+            title="Go Back"
+            variant="primary"
+            onPress={() => navigation.goBack()}
+            icon="arrow-left"
+          />
+        </View>
+      </GradientBackground>
     );
   }
-  
-  const isActive = new Date(challenge.startDate) <= new Date() && new Date(challenge.endDate) >= new Date();
-  const isUpcoming = new Date(challenge.startDate) > new Date();
-  const isCompleted = new Date(challenge.endDate) < new Date();
-  
+
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.headerTopRow}>
-          <TouchableOpacity 
-            style={styles.backButtonIcon}
+    <GradientBackground>
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity
+            style={styles.backButton}
             onPress={() => navigation.goBack()}
           >
-            <Ionicons name="arrow-back" size={24} color="white" />
+            <Ionicons name="arrow-back" size={24} color={colors.primary} />
           </TouchableOpacity>
-          
-          {isActive && (
-            <View style={[styles.statusBadge, styles.activeBadge]}>
-              <Text style={styles.statusText}>Active</Text>
-            </View>
-          )}
-          
-          {isUpcoming && (
-            <View style={[styles.statusBadge, styles.upcomingBadge]}>
-              <Text style={styles.statusText}>Upcoming</Text>
-            </View>
-          )}
-          
-          {isCompleted && (
-            <View style={[styles.statusBadge, styles.completedBadge]}>
-              <Text style={styles.statusText}>Completed</Text>
-            </View>
-          )}
+          <Text style={styles.headerTitle}>Challenge Details</Text>
+          <View style={{ width: 40 }} />
         </View>
         
-        <View style={styles.titleContainer}>
-          <View style={styles.iconContainer}>
-            {getGoalTypeIcon(challenge.goalType)}
-          </View>
-          <Text style={styles.title}>{challenge.title}</Text>
-        </View>
-        
-        <Text style={styles.description}>{challenge.description}</Text>
-        
-        <View style={styles.metaInfo}>
-          <View style={styles.metaItem}>
-            <MaterialIcons name="date-range" size={18} color="white" />
-            <Text style={styles.metaText}>
-              {formatDate(challenge.startDate)} - {formatDate(challenge.endDate)}
-            </Text>
-          </View>
-          
-          <View style={styles.metaItem}>
-            <MaterialIcons name="person" size={18} color="white" />
-            <Text style={styles.metaText}>
-              Created by {challenge.creator.name}
-            </Text>
-          </View>
-        </View>
-      </View>
-      
-      <View style={styles.content}>
-        <View style={styles.statsRow}>
-          <View style={styles.statCard}>
-            <Text style={styles.statValue}>{challenge.goalTarget}</Text>
-            <Text style={styles.statLabel}>
-              Daily target ({getGoalTypeUnit(challenge.goalType)})
-            </Text>
-          </View>
-          
-          <View style={styles.statCard}>
-            <Text style={styles.statValue}>${challenge.entryFee}</Text>
-            <Text style={styles.statLabel}>Entry fee</Text>
-          </View>
-          
-          <View style={styles.statCard}>
-            <Text style={styles.statValue}>{challenge.participants.length}</Text>
-            <Text style={styles.statLabel}>Participants</Text>
-          </View>
-        </View>
-        
-        {isParticipating && userProgress && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Your Progress</Text>
-            <View style={styles.progressBar}>
-              <View 
-                style={[
-                  styles.progressFill, 
-                  { width: `${completionRate}%` }
-                ]} 
+        <ScrollView style={styles.scrollContainer} contentContainerStyle={styles.contentContainer}>
+          <View style={styles.challengeImageContainer}>
+            <Image
+              source={{ uri: challenge.imageUrl || 'https://via.placeholder.com/400x200' }}
+              style={styles.challengeImage}
+              resizeMode="cover"
+            />
+            <LinearGradient
+              colors={['transparent', colors.backgroundDarker]}
+              style={styles.imageGradient}
+            />
+            <View style={styles.tagContainer}>
+              <Badge
+                label={challenge.category}
+                variant="primary"
+                size="small"
               />
             </View>
-            <Text style={styles.progressText}>
-              {completionRate}% complete
-            </Text>
-            
-            <TouchableOpacity 
-              style={styles.progressActionButton}
-              onPress={() => navigation.navigate('ProgressTracking', { challengeId: challenge.id })}
-            >
-              <Text style={styles.progressActionButtonText}>View Progress Details</Text>
-            </TouchableOpacity>
-            
-            {isActive && (
-              <TouchableOpacity 
-                style={styles.recordButton}
-                onPress={() => navigation.navigate('RecordProgress', { challengeId: challenge.id })}
-              >
-                <MaterialIcons name="add-circle" size={18} color="white" />
-                <Text style={styles.recordButtonText}>Record Today's Progress</Text>
-              </TouchableOpacity>
-            )}
           </View>
-        )}
-        
-        {renderParticipants()}
-        
-        {!isParticipating && !isCreator && !isCompleted && (
-          <TouchableOpacity
-            style={styles.joinButton}
-            onPress={handleJoinChallenge}
-          >
-            <Text style={styles.joinButtonText}>Join Challenge</Text>
-          </TouchableOpacity>
-        )}
-        
-        {isParticipating && (
-          <TouchableOpacity
-            style={styles.leaderboardButton}
-            onPress={() => navigation.navigate('Leaderboard', { challengeId: challenge.id })}
-          >
-            <FontAwesome5 name="trophy" size={18} color="white" />
-            <Text style={styles.leaderboardButtonText}>View Leaderboard</Text>
-          </TouchableOpacity>
-        )}
+          
+          <Card variant="elevated" style={styles.challengeCard}>
+            <Text style={styles.challengeTitle}>{challenge.title}</Text>
+            <View style={styles.statsRow}>
+              <View style={styles.statItem}>
+                <FontAwesome5 name="calendar-alt" size={16} color={colors.primary} />
+                <Text style={styles.statText}>
+                  {new Date(challenge.startDate).toLocaleDateString()} - {new Date(challenge.endDate).toLocaleDateString()}
+                </Text>
+              </View>
+              <View style={styles.statItem}>
+                <FontAwesome5 name="users" size={16} color={colors.primary} />
+                <Text style={styles.statText}>{challenge.participants.length} Participants</Text>
+              </View>
+            </View>
+            
+            {isParticipant && (
+              <View style={styles.progressContainer}>
+                <View style={styles.progressHeader}>
+                  <Text style={styles.progressTitle}>Your Progress</Text>
+                  <Text style={styles.progressPercent}>{userProgress}%</Text>
+                </View>
+                <View style={styles.progressBarContainer}>
+                  <View 
+                    style={[
+                      styles.progressBar, 
+                      { width: `${userProgress}%`, backgroundColor: userProgress > 66 ? components.progressBar.success : userProgress > 33 ? components.progressBar.primary : components.progressBar.warning }
+                    ]} 
+                  />
+                </View>
+              </View>
+            )}
+            
+            <Card variant="outlined" style={styles.section}>
+              <Text style={styles.sectionTitle}>Description</Text>
+              <Text style={styles.descriptionText}>{challenge.description}</Text>
+            </Card>
+            
+            <Card variant="outlined" style={styles.section}>
+              <Text style={styles.sectionTitle}>Goal</Text>
+              <View style={styles.goalContainer}>
+                <FontAwesome5 
+                  name={
+                    challenge.goalType === 'steps' ? 'walking' : 
+                    challenge.goalType === 'workout' ? 'dumbbell' : 
+                    challenge.goalType === 'meditation' ? 'spa' : 'star'
+                  } 
+                  size={20} 
+                  color={colors.primary} 
+                />
+                <Text style={styles.goalText}>
+                  {getGoalTypeText(challenge.goalType, challenge.goalValue)}
+                </Text>
+              </View>
+            </Card>
+            
+            <Card variant="outlined" style={styles.section}>
+              <Text style={styles.sectionTitle}>Financial Details</Text>
+              <View style={styles.financeContainer}>
+                <View style={styles.financeItem}>
+                  <FontAwesome5 name="ticket-alt" size={16} color={colors.primary} />
+                  <Text style={styles.financeText}>Entry Fee: ${challenge.entryFee.toFixed(2)}</Text>
+                </View>
+                <View style={styles.financeItem}>
+                  <FontAwesome5 name="dollar-sign" size={16} color={colors.success} />
+                  <Text style={styles.financeText}>
+                    Pot Size: ${(challenge.entryFee * challenge.participants.length).toFixed(2)}
+                  </Text>
+                </View>
+                {isParticipant && (
+                  <View style={styles.financeItem}>
+                    <FontAwesome5 name="trophy" size={16} color={colors.warning} />
+                    <Text style={styles.financeText}>
+                      Potential Reward: ${(challenge.entryFee * challenge.participants.length).toFixed(2)}
+                    </Text>
+                  </View>
+                )}
+              </View>
+            </Card>
+            
+            <View style={styles.buttonsContainer}>
+              {isParticipant ? (
+                <>
+                  <Button
+                    title="Record Progress"
+                    variant="gradient"
+                    onPress={handleRecordProgress}
+                    icon="plus-circle"
+                    style={styles.actionButton}
+                    fullWidth
+                    size="large"
+                  />
+                  
+                  <View style={styles.buttonRow}>
+                    <Button
+                      title="Leaderboard"
+                      variant="secondary"
+                      onPress={handleViewLeaderboard}
+                      icon="trophy"
+                      style={styles.secondaryButton}
+                    />
+                    
+                    <Button
+                      title="Progress"
+                      variant="secondary"
+                      onPress={handleViewProgress}
+                      icon="chart-line"
+                      style={styles.secondaryButton}
+                    />
+                  </View>
+                </>
+              ) : (
+                <Button
+                  title={`Join Challenge ($${challenge.entryFee})`}
+                  variant="gradient"
+                  onPress={handleJoinChallenge}
+                  isLoading={joining}
+                  icon="handshake"
+                  style={styles.actionButton}
+                  fullWidth
+                  size="large"
+                />
+              )}
+            </View>
+          </Card>
+        </ScrollView>
       </View>
-    </ScrollView>
+    </GradientBackground>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.lg,
+    paddingTop: 60,
+    paddingBottom: spacing.md,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: borderRadius.round,
+    backgroundColor: colors.cardDark,
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: colors.textPrimary,
+  },
+  scrollContainer: {
+    flex: 1,
+  },
+  contentContainer: {
+    paddingBottom: spacing.xl,
+    paddingHorizontal: spacing.md,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f5f5f5',
   },
   loadingText: {
-    marginTop: 10,
+    marginTop: spacing.md,
     fontSize: 16,
-    color: '#666',
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f5f5f5',
-    padding: 20,
+    color: colors.textSecondary,
   },
   errorText: {
     fontSize: 18,
-    color: '#666',
-    marginTop: 10,
-    marginBottom: 20,
+    color: colors.danger,
+    marginBottom: spacing.md,
   },
-  backButton: {
-    backgroundColor: '#4285F4',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 5,
+  challengeImageContainer: {
+    position: 'relative',
+    marginBottom: spacing.md,
+    borderRadius: borderRadius.lg,
+    overflow: 'hidden',
+    ...shadows.medium,
   },
-  backButtonText: {
-    color: 'white',
-    fontWeight: 'bold',
+  challengeImage: {
+    width: '100%',
+    height: 200,
+    borderRadius: borderRadius.lg,
   },
-  header: {
-    backgroundColor: '#4285F4',
-    padding: 20,
-    paddingTop: 40,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
+  imageGradient: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 100,
   },
-  headerTopRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 20,
+  tagContainer: {
+    position: 'absolute',
+    top: spacing.md,
+    right: spacing.md,
   },
-  backButtonIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
+  challengeCard: {
+    marginBottom: spacing.md,
+    borderRadius: borderRadius.lg,
+    overflow: 'hidden',
+    ...shadows.medium,
   },
-  statusBadge: {
-    paddingVertical: 5,
-    paddingHorizontal: 15,
-    borderRadius: 20,
-  },
-  activeBadge: {
-    backgroundColor: '#4CAF50',
-  },
-  upcomingBadge: {
-    backgroundColor: '#FFC107',
-  },
-  completedBadge: {
-    backgroundColor: '#9E9E9E',
-  },
-  statusText: {
-    color: 'white',
-    fontWeight: 'bold',
-    fontSize: 12,
-  },
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  iconContainer: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 15,
-  },
-  title: {
+  challengeTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: 'white',
-    flex: 1,
-  },
-  description: {
-    fontSize: 16,
-    color: 'rgba(255, 255, 255, 0.9)',
-    marginBottom: 20,
-    lineHeight: 24,
-  },
-  metaInfo: {
-    marginTop: 10,
-  },
-  metaItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  metaText: {
-    color: 'white',
-    marginLeft: 10,
-    fontSize: 14,
-  },
-  content: {
-    padding: 20,
+    color: colors.textPrimary,
+    marginBottom: spacing.md,
   },
   statsRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 25,
+    flexWrap: 'wrap',
+    marginBottom: spacing.md,
   },
-  statCard: {
-    flex: 1,
-    backgroundColor: 'white',
-    borderRadius: 15,
-    padding: 15,
-    marginHorizontal: 5,
+  statItem: {
+    flexDirection: 'row',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    marginRight: spacing.md,
+    marginBottom: spacing.sm,
   },
-  statValue: {
-    fontSize: 22,
+  statText: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    marginLeft: spacing.xs,
+  },
+  progressContainer: {
+    backgroundColor: colors.cardDark,
+    padding: spacing.md,
+    borderRadius: borderRadius.md,
+    marginBottom: spacing.md,
+  },
+  progressHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.sm,
+  },
+  progressTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.textPrimary,
+  },
+  progressPercent: {
+    fontSize: 16,
     fontWeight: 'bold',
-    color: '#4285F4',
-    marginBottom: 5,
+    color: colors.primary,
   },
-  statLabel: {
-    fontSize: 12,
-    color: '#666',
-    textAlign: 'center',
+  progressBarContainer: {
+    height: 8,
+    backgroundColor: colors.backgroundLighter,
+    borderRadius: 4,
+    overflow: 'hidden',
+  },
+  progressBar: {
+    height: '100%',
+    borderRadius: 4,
   },
   section: {
-    backgroundColor: 'white',
-    borderRadius: 15,
-    padding: 20,
-    marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    marginBottom: spacing.md,
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 15,
-  },
-  progressBar: {
-    height: 12,
-    backgroundColor: '#E5E5E5',
-    borderRadius: 6,
-    marginBottom: 10,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: '#4CAF50',
-    borderRadius: 6,
-  },
-  progressText: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 20,
-  },
-  progressActionButton: {
-    backgroundColor: '#EAF2FF',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 5,
-    alignItems: 'center',
-  },
-  progressActionButtonText: {
-    color: '#4285F4',
     fontWeight: '600',
+    color: colors.textPrimary,
+    marginBottom: spacing.sm,
   },
-  recordButton: {
-    backgroundColor: '#4CAF50',
+  descriptionText: {
+    fontSize: 16,
+    color: colors.textSecondary,
+    lineHeight: 24,
+  },
+  goalContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 5,
-    marginTop: 15,
+    backgroundColor: colors.cardDark,
+    padding: spacing.md,
+    borderRadius: borderRadius.md,
   },
-  recordButtonText: {
-    color: 'white',
-    fontWeight: 'bold',
-    marginLeft: 10,
-  },
-  participantsList: {
-    paddingBottom: 10,
-  },
-  participantItem: {
-    alignItems: 'center',
-    marginRight: 20,
-    width: 70,
-  },
-  participantAvatar: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    marginBottom: 5,
-  },
-  participantAvatarPlaceholder: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: '#E1E1E1',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 5,
-  },
-  participantAvatarText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#4285F4',
-  },
-  participantName: {
-    fontSize: 12,
-    color: '#666',
-    textAlign: 'center',
-  },
-  joinButton: {
-    backgroundColor: '#4285F4',
-    padding: 15,
-    borderRadius: 10,
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  joinButtonText: {
-    color: 'white',
-    fontWeight: 'bold',
+  goalText: {
     fontSize: 16,
+    color: colors.textPrimary,
+    marginLeft: spacing.md,
+    fontWeight: '500',
   },
-  leaderboardButton: {
-    backgroundColor: '#FF9800',
+  financeContainer: {
+    backgroundColor: colors.cardDark,
+    padding: spacing.md,
+    borderRadius: borderRadius.md,
+  },
+  financeItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 20,
+    marginBottom: spacing.sm,
   },
-  leaderboardButtonText: {
-    color: 'white',
-    fontWeight: 'bold',
+  financeText: {
     fontSize: 16,
-    marginLeft: 10,
+    color: colors.textSecondary,
+    marginLeft: spacing.sm,
+  },
+  buttonsContainer: {
+    marginTop: spacing.lg,
+  },
+  actionButton: {
+    marginBottom: spacing.md,
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  secondaryButton: {
+    flex: 0.48,
   },
 });
 

@@ -1,122 +1,46 @@
-import axios from 'axios';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import api from './api';
-
-export type User = {
+export interface User {
   id: string;
   name: string;
   email: string;
   profilePic?: string;
-  emailVerified: boolean;
-  walletAddress?: string;
+  walletBalance?: number;
+  emailVerified?: boolean;
+}
+
+export const loginUser = async (email: string, password: string): Promise<User> => {
+  await new Promise(resolve => setTimeout(resolve, 1000));
+  return {
+    id: 'currentUser',
+    name: email.split('@')[0],
+    email: email,
+    profilePic: 'https://randomuser.me/api/portraits/men/32.jpg',
+    walletBalance: 100,
+    emailVerified: true
+  };
 };
 
-type SignupData = {
-  name: string;
-  email: string;
-  password: string;
+export const registerUser = async (name: string, email: string, password: string): Promise<User> => {
+  await new Promise(resolve => setTimeout(resolve, 1000));
+  return {
+    id: 'currentUser',
+    name: name,
+    email: email,
+    profilePic: undefined,
+    walletBalance: 50,
+    emailVerified: true
+  };
 };
 
-type LoginData = {
-  email: string;
-  password: string;
+export const logoutUser = async (): Promise<void> => {
+  await new Promise(resolve => setTimeout(resolve, 500));
 };
 
-type VerifyEmailData = {
-  token: string;
+export const verifyEmail = async (email: string, code: string): Promise<boolean> => {
+  await new Promise(resolve => setTimeout(resolve, 800));
+  return true;
 };
 
-let currentUser: User | null = null;
-
-// Register a new user
-export const signup = async (data: SignupData): Promise<{ user: User; token: string }> => {
-  try {
-    const response = await api.post('/auth/signup', data);
-    const { token, user } = response.data;
-    
-    // Save token to AsyncStorage
-    await AsyncStorage.setItem('authToken', token);
-    
-    currentUser = user;
-    return { user, token };
-  } catch (error) {
-    console.error('Signup error:', error);
-    throw error;
-  }
+export const checkAuthStatus = async (): Promise<boolean> => {
+  await new Promise(resolve => setTimeout(resolve, 500));
+  return false;
 };
-
-// Login with email and password
-export const login = async (data: LoginData): Promise<{ user: User; token: string }> => {
-  try {
-    const response = await api.post('/auth/login', data);
-    const { token, user } = response.data;
-    
-    // Save token to AsyncStorage
-    await AsyncStorage.setItem('authToken', token);
-    
-    currentUser = user;
-    return { user, token };
-  } catch (error) {
-    console.error('Login error:', error);
-    throw error;
-  }
-};
-
-// Verify email address
-export const verifyEmail = async (data: VerifyEmailData): Promise<boolean> => {
-  try {
-    const response = await api.post('/auth/verify-email', data);
-    
-    if (currentUser) {
-      currentUser.emailVerified = true;
-    }
-    
-    return true;
-  } catch (error) {
-    console.error('Email verification error:', error);
-    throw error;
-  }
-};
-
-// Resend verification email
-export const resendVerificationEmail = async (): Promise<boolean> => {
-  try {
-    await api.post('/auth/resend-verification');
-    return true;
-  } catch (error) {
-    console.error('Resend verification error:', error);
-    throw error;
-  }
-};
-
-// Get the current logged-in user
-export const getCurrentUser = async (): Promise<User | null> => {
-  if (currentUser) {
-    return currentUser;
-  }
-  
-  const token = await AsyncStorage.getItem('authToken');
-  if (!token) {
-    return null;
-  }
-  
-  try {
-    const response = await api.get('/auth/me');
-    currentUser = response.data;
-    return currentUser;
-  } catch (error) {
-    console.error('Failed to get current user:', error);
-    return null;
-  }
-};
-
-// Logout the current user
-export const signOut = async (): Promise<void> => {
-  try {
-    await AsyncStorage.removeItem('authToken');
-    currentUser = null;
-  } catch (error) {
-    console.error('Logout error:', error);
-    throw error;
-  }
-}; 

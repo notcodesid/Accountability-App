@@ -1,536 +1,429 @@
-import React, { useEffect, useState } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  TouchableOpacity, 
-  Image, 
-  ScrollView,
-  RefreshControl,
-  FlatList
+import React, { useState, useEffect, useContext } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  TouchableOpacity,
+  Image,
+  ActivityIndicator,
+  RefreshControl
 } from 'react-native';
-import { useAuth } from '../contexts/AuthContext';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../types/navigation';
-import { 
-  getActiveUserChallenges, 
-  getUpcomingUserChallenges,
-  calculateChallengeCompletion,
-  Challenge
-} from '../services/dummyData';
-import { FontAwesome5, MaterialIcons } from '@expo/vector-icons';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RouteProp } from '@react-navigation/native';
+import { RootStackParamList } from '../types/navigationTypes';
+import { AuthContext } from '../context/AuthContext';
+import { FontAwesome5 } from '@expo/vector-icons';
+import { Challenge, getParticipatingChallenges, getAllChallenges } from '../services/dummyData';
+import GradientBackground from '../components/GradientBackground';
+import Card from '../components/Card';
+import Button from '../components/Button';
+import Badge from '../components/Badge';
+import { colors, spacing, components, shadows, borderRadius, fontSize } from '../config/theme';
 
-// Use React Navigation's screen props type
-type HomeScreenProps = NativeStackScreenProps<RootStackParamList, 'Home'>;
+// Extended User interface to include wallet
+interface UserWithWallet {
+  id: string;
+  email: string;
+  name: string;
+  walletBalance?: number;
+}
 
-const HomeScreen = ({ navigation }: HomeScreenProps) => {
-  const { user, logout } = useAuth();
-  const [activeChallenges, setActiveChallenges] = useState<Challenge[]>([]);
-  const [upcomingChallenges, setUpcomingChallenges] = useState<Challenge[]>([]);
+type HomeScreenProps = {
+  navigation: StackNavigationProp<RootStackParamList, 'Home'>;
+  route: RouteProp<RootStackParamList, 'Home'>;
+};
+
+const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
+  const { user } = useContext(AuthContext);
+  const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-
-  const loadChallenges = () => {
-    if (user) {
-      setActiveChallenges(getActiveUserChallenges(user.id));
-      setUpcomingChallenges(getUpcomingUserChallenges(user.id));
-    }
-  };
-
+  const [activeChallenges, setActiveChallenges] = useState<Challenge[]>([]);
+  const [availableChallenges, setAvailableChallenges] = useState<Challenge[]>([]);
+  
+  // Cast user to extended type with wallet
+  const userWithWallet = user as UserWithWallet;
+  
   useEffect(() => {
     loadChallenges();
-  }, [user]);
-
-  const onRefresh = React.useCallback(() => {
+  }, []);
+  
+  const loadChallenges = async () => {
+    setLoading(true);
+    try {
+      // In a real app, these would be API calls
+      const userChallenges = getParticipatingChallenges(user?.id || 'currentUser');
+      const allChallenges = getAllChallenges();
+      
+      // Filter out challenges the user is already participating in
+      const available = allChallenges.filter(
+        challenge => !userChallenges.some(uc => uc.id === challenge.id)
+      );
+      
+      setActiveChallenges(userChallenges);
+      setAvailableChallenges(available);
+    } catch (error) {
+      console.error('Error loading challenges:', error);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+  
+  const onRefresh = () => {
     setRefreshing(true);
     loadChallenges();
-    setTimeout(() => {
-      setRefreshing(false);
-    }, 1000);
-  }, [user]);
-
-  const handleLogout = async () => {
-    try {
-      await logout();
-    } catch (error) {
-      console.error('Logout error:', error);
-    }
   };
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
-      month: 'short', 
-      day: 'numeric',
-      year: 'numeric'
-    });
-  };
-
-  const getGoalTypeIcon = (goalType: Challenge['goalType']) => {
-    switch (goalType) {
-      case 'STEPS':
-        return <FontAwesome5 name="walking" size={16} color="#4285F4" />;
-      case 'WORKOUTS':
-        return <FontAwesome5 name="dumbbell" size={16} color="#4285F4" />;
-      case 'MEDITATION':
-        return <FontAwesome5 name="spa" size={16} color="#4285F4" />;
-      case 'CUSTOM':
-        return <FontAwesome5 name="star" size={16} color="#4285F4" />;
-      default:
-        return <FontAwesome5 name="check" size={16} color="#4285F4" />;
-    }
-  };
-
-  const renderChallengeItem = ({ item }: { item: Challenge }) => {
-    const completionPercentage = user ? calculateChallengeCompletion(user.id, item.id) : 0;
-    
+  
+  const renderChallengeCard = ({ item }: { item: Challenge }) => {
     return (
-      <TouchableOpacity 
-        style={styles.challengeCard}
+      <Card
+        variant="elevated"
+        style={styles.card}
         onPress={() => navigation.navigate('ChallengeDetails', { challengeId: item.id })}
       >
-        <View style={styles.challengeHeader}>
-          <View style={styles.challengeTypeContainer}>
-            {getGoalTypeIcon(item.goalType)}
-            <Text style={styles.challengeType}>{item.goalType}</Text>
-          </View>
-          <Text style={styles.entryFee}>${item.entryFee}</Text>
-        </View>
-
-        <Text style={styles.challengeTitle}>{item.title}</Text>
-        <Text style={styles.challengeDescription} numberOfLines={2}>{item.description}</Text>
+        <Image
+          source={{ uri: item.imageUrl || 'https://via.placeholder.com/400x200' }}
+          style={styles.cardImage}
+          resizeMode="cover"
+        />
         
-        <View style={styles.challengeDetails}>
-          <View style={styles.dateContainer}>
-            <MaterialIcons name="date-range" size={14} color="#666" />
-            <Text style={styles.dateText}>
-              {formatDate(item.startDate)} - {formatDate(item.endDate)}
-            </Text>
-          </View>
-          
-          <View style={styles.participantsContainer}>
-            <MaterialIcons name="people" size={14} color="#666" />
-            <Text style={styles.participantsText}>
-              {item.participants.length} participants
-            </Text>
-          </View>
-        </View>
-
-        <View style={styles.progressContainer}>
-          <View style={styles.progressBar}>
-            <View 
-              style={[
-                styles.progressFill, 
-                { width: `${completionPercentage}%` }
-              ]} 
+        <View style={styles.cardContent}>
+          <View style={styles.cardHeader}>
+            <Text style={styles.cardTitle}>{item.title}</Text>
+            <Badge
+              label={item.category}
+              variant="primary"
+              size="small"
+              style={styles.categoryBadge}
             />
           </View>
-          <Text style={styles.progressText}>{completionPercentage}% complete</Text>
+          
+          <Text style={styles.cardDescription} numberOfLines={2}>
+            {item.description}
+          </Text>
+          
+          <View style={styles.cardStats}>
+            <View style={styles.cardStat}>
+              <FontAwesome5 name="calendar-alt" size={14} color={colors.primary} />
+              <Text style={styles.cardStatText}>
+                {new Date(item.startDate).toLocaleDateString()} - {new Date(item.endDate).toLocaleDateString()}
+              </Text>
+            </View>
+            
+            <View style={styles.cardStat}>
+              <FontAwesome5 name="users" size={14} color={colors.primary} />
+              <Text style={styles.cardStatText}>{item.participants.length} participants</Text>
+            </View>
+            
+            <View style={styles.cardStat}>
+              <FontAwesome5 name="dollar-sign" size={14} color={colors.primary} />
+              <Text style={styles.cardStatText}>${item.entryFee} entry fee</Text>
+            </View>
+          </View>
         </View>
-      </TouchableOpacity>
+      </Card>
     );
   };
-
-  const renderUpcomingChallengeItem = ({ item }: { item: Challenge }) => {
+  
+  if (loading && !refreshing) {
     return (
-      <TouchableOpacity 
-        style={styles.upcomingChallengeCard}
-        onPress={() => navigation.navigate('ChallengeDetails', { challengeId: item.id })}
-      >
-        <View style={styles.upcomingChallengeBadge}>
-          <Text style={styles.upcomingBadgeText}>Upcoming</Text>
+      <GradientBackground>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={styles.loadingText}>Loading challenges...</Text>
         </View>
-        
-        <View style={styles.upcomingChallengeContent}>
-          <View style={styles.upcomingChallengeIcon}>
-            {getGoalTypeIcon(item.goalType)}
+      </GradientBackground>
+    );
+  }
+  
+  return (
+    <GradientBackground>
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <View style={styles.headerTitleContainer}>
+            <Text style={styles.headerTitle}>Accountability</Text>
+            <Text style={styles.headerSubtitle}>Track your challenges and stay motivated</Text>
           </View>
           
-          <View style={styles.upcomingChallengeDetails}>
-            <Text style={styles.upcomingChallengeTitle}>{item.title}</Text>
-            <Text style={styles.upcomingChallengeDate}>
-              Starts: {formatDate(item.startDate)}
-            </Text>
-          </View>
-        </View>
-      </TouchableOpacity>
-    );
-  };
-
-  return (
-    <ScrollView 
-      style={styles.container}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-      }
-    >
-      <View style={styles.header}>
-        <View style={styles.headerContent}>
-          <Text style={styles.greeting}>Hello, {user?.name}!</Text>
-          <TouchableOpacity onPress={() => navigation.navigate('Profile')}>
-            {user?.profilePic ? (
-              <Image source={{ uri: user.profilePic }} style={styles.profilePic} />
-            ) : (
-              <View style={styles.profilePlaceholder}>
-                <Text style={styles.profilePlaceholderText}>
-                  {user?.name?.charAt(0).toUpperCase() || "?"}
-                </Text>
-              </View>
-            )}
+          <TouchableOpacity 
+            style={styles.profileButton}
+            onPress={() => {
+              // Type casting to fix TypeScript issue with navigation
+              (navigation as any).navigate('Profile');
+            }}
+          >
+            <FontAwesome5 name="user-circle" size={28} color={colors.primary} />
           </TouchableOpacity>
         </View>
-      </View>
-
-      <View style={styles.content}>
-        <View style={styles.quickStatsContainer}>
-          <View style={styles.statCard}>
-            <Text style={styles.statNumber}>{activeChallenges.length}</Text>
-            <Text style={styles.statLabel}>Active Challenges</Text>
-          </View>
-          <View style={styles.statCard}>
-            <Text style={styles.statNumber}>{upcomingChallenges.length}</Text>
-            <Text style={styles.statLabel}>Upcoming</Text>
-          </View>
-          <View style={styles.statCard}>
-            <Text style={styles.statNumber}>${activeChallenges.reduce((sum, c) => sum + c.entryFee, 0)}</Text>
-            <Text style={styles.statLabel}>At Stake</Text>
-          </View>
-        </View>
-
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Active Challenges</Text>
-            <TouchableOpacity onPress={() => navigation.navigate('JoinChallenge')}>
-              <Text style={styles.sectionAction}>Find More</Text>
-            </TouchableOpacity>
-          </View>
-
-          {activeChallenges.length > 0 ? (
-            <FlatList
-              data={activeChallenges}
-              renderItem={renderChallengeItem}
-              keyExtractor={item => item.id}
-              horizontal={false}
-              scrollEnabled={false}
-            />
-          ) : (
-            <View style={styles.emptyState}>
-              <FontAwesome5 name="running" size={40} color="#ccc" />
-              <Text style={styles.emptyStateText}>You don't have any active challenges</Text>
-              <TouchableOpacity 
-                style={styles.createButton}
-                onPress={() => navigation.navigate('CreateChallenge')}
-              >
-                <Text style={styles.createButtonText}>Create Challenge</Text>
-              </TouchableOpacity>
+        
+        <FlatList
+          data={[]}
+          ListHeaderComponent={() => (
+            <View style={styles.listContent}>
+              <View style={styles.walletCard}>
+                <View style={styles.walletInfo}>
+                  <Text style={styles.walletLabel}>Your Wallet</Text>
+                  <Text style={styles.walletBalance}>${userWithWallet?.walletBalance || "0.00"}</Text>
+                </View>
+                <Button
+                  title="Add Funds"
+                  variant="secondary"
+                  size="small"
+                  icon="plus"
+                  onPress={() => {
+                    // Type casting to fix TypeScript issue with navigation
+                    (navigation as any).navigate('Wallet');
+                  }}
+                />
+              </View>
+            
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>Your Active Challenges</Text>
+                <TouchableOpacity onPress={() => {
+                  // Type casting to fix TypeScript issue with navigation
+                  (navigation as any).navigate('RecordProgress', 
+                    activeChallenges.length > 0 ? { challengeId: activeChallenges[0].id } : undefined);
+                }}>
+                  <Text style={styles.sectionAction}>Record Progress</Text>
+                </TouchableOpacity>
+              </View>
+              
+              {activeChallenges.length === 0 ? (
+                <Card variant="outlined" style={styles.emptyStateCard}>
+                  <View style={styles.emptyState}>
+                    <FontAwesome5 name="flag" size={40} color={colors.textMuted} />
+                    <Text style={styles.emptyStateText}>You haven't joined any challenges yet</Text>
+                    <Text style={styles.emptyStateSubtext}>
+                      Browse available challenges below or create your own
+                    </Text>
+                  </View>
+                </Card>
+              ) : (
+                <FlatList
+                  data={activeChallenges}
+                  renderItem={renderChallengeCard}
+                  keyExtractor={(item) => item.id}
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.horizontalList}
+                />
+              )}
+              
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>Available Challenges</Text>
+                <TouchableOpacity onPress={() => {
+                  // Type casting to fix TypeScript issue with navigation
+                  (navigation as any).navigate('CreateStack');
+                }}>
+                  <Text style={styles.sectionAction}>Create New</Text>
+                </TouchableOpacity>
+              </View>
+              
+              {availableChallenges.length === 0 ? (
+                <Card variant="outlined" style={styles.emptyStateCard}>
+                  <View style={styles.emptyState}>
+                    <FontAwesome5 name="search" size={40} color={colors.textMuted} />
+                    <Text style={styles.emptyStateText}>No available challenges found</Text>
+                    <Button
+                      title="Create a Challenge"
+                      variant="gradient"
+                      icon="plus"
+                      onPress={() => {
+                        // Type casting to fix TypeScript issue with navigation
+                        (navigation as any).navigate('CreateStack');
+                      }}
+                      style={styles.createButton}
+                    />
+                  </View>
+                </Card>
+              ) : (
+                <FlatList
+                  data={availableChallenges}
+                  renderItem={renderChallengeCard}
+                  keyExtractor={(item) => item.id}
+                  scrollEnabled={false}
+                />
+              )}
             </View>
           )}
-        </View>
-
-        {upcomingChallenges.length > 0 && (
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Upcoming Challenges</Text>
-            </View>
-
-            <FlatList
-              data={upcomingChallenges}
-              renderItem={renderUpcomingChallengeItem}
-              keyExtractor={item => item.id}
-              horizontal={true}
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.upcomingList}
+          renderItem={() => null}
+          refreshControl={
+            <RefreshControl 
+              refreshing={refreshing} 
+              onRefresh={onRefresh}
+              colors={[colors.primary]}
+              tintColor={colors.primary}
             />
-          </View>
-        )}
-
-        <TouchableOpacity 
-          style={styles.createChallengeButton}
-          onPress={() => navigation.navigate('CreateChallenge')}
-        >
-          <Text style={styles.createChallengeButtonText}>Create New Challenge</Text>
-        </TouchableOpacity>
+          }
+        />
       </View>
-    </ScrollView>
+    </GradientBackground>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
   },
-  header: {
-    backgroundColor: '#4285F4',
-    paddingTop: 20,
-    paddingBottom: 30,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-  },
-  headerContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-  },
-  greeting: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: 'white',
-  },
-  profilePic: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    borderWidth: 2,
-    borderColor: 'white',
-  },
-  profilePlaceholder: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+  loadingContainer: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 2,
-    borderColor: 'white',
   },
-  profilePlaceholderText: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: 'white',
+  loadingText: {
+    marginTop: spacing.md,
+    fontSize: 16,
+    color: colors.textSecondary,
   },
-  content: {
-    flex: 1,
-    paddingHorizontal: 20,
-    marginTop: -20,
-  },
-  quickStatsContainer: {
+  header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 20,
-  },
-  statCard: {
-    flex: 1,
-    backgroundColor: 'white',
-    borderRadius: 15,
-    padding: 15,
-    marginHorizontal: 5,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    paddingTop: 60,
+    paddingBottom: spacing.md,
+    paddingHorizontal: spacing.lg,
   },
-  statNumber: {
-    fontSize: 22,
+  headerTitleContainer: {
+    flex: 1,
+  },
+  headerTitle: {
+    fontSize: 28,
     fontWeight: 'bold',
-    color: '#4285F4',
-    marginBottom: 5,
+    color: colors.textPrimary,
   },
-  statLabel: {
-    fontSize: 12,
-    color: '#666',
-    textAlign: 'center',
+  headerSubtitle: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    marginTop: spacing.xs,
   },
-  section: {
-    marginBottom: 25,
+  profileButton: {
+    padding: spacing.xs,
+  },
+  listContent: {
+    padding: spacing.md,
+  },
+  walletCard: {
+    backgroundColor: colors.cardAlt,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    marginBottom: spacing.lg,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    ...shadows.medium,
+  },
+  walletInfo: {
+    flex: 1,
+  },
+  walletLabel: {
+    fontSize: fontSize.sm,
+    color: colors.textSecondary,
+    marginBottom: spacing.xs,
+  },
+  walletBalance: {
+    fontSize: fontSize.xxl,
+    fontWeight: 'bold',
+    color: colors.textPrimary,
   },
   sectionHeader: {
+    marginBottom: spacing.md,
+    marginTop: spacing.lg,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 15,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
-    color: '#333',
+    color: colors.textPrimary,
   },
   sectionAction: {
-    fontSize: 14,
-    color: '#4285F4',
-  },
-  challengeCard: {
-    backgroundColor: 'white',
-    borderRadius: 15,
-    padding: 15,
-    marginBottom: 15,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  challengeHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  challengeTypeContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#EAF2FF',
-    paddingVertical: 5,
-    paddingHorizontal: 10,
-    borderRadius: 20,
-  },
-  challengeType: {
-    fontSize: 12,
-    color: '#4285F4',
-    marginLeft: 5,
+    fontSize: fontSize.sm,
+    color: colors.primary,
     fontWeight: '600',
   },
-  entryFee: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#4CAF50',
-  },
-  challengeTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 5,
-  },
-  challengeDescription: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 10,
-  },
-  challengeDetails: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 15,
-  },
-  dateContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  dateText: {
-    fontSize: 12,
-    color: '#666',
-    marginLeft: 5,
-  },
-  participantsContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  participantsText: {
-    fontSize: 12,
-    color: '#666',
-    marginLeft: 5,
-  },
-  progressContainer: {
-    marginTop: 5,
-  },
-  progressBar: {
-    height: 10,
-    backgroundColor: '#E5E5E5',
-    borderRadius: 5,
-    marginBottom: 5,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: '#4CAF50',
-    borderRadius: 5,
-  },
-  progressText: {
-    fontSize: 12,
-    color: '#666',
-    textAlign: 'right',
+  emptyStateCard: {
+    marginBottom: spacing.md,
   },
   emptyState: {
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 30,
-    backgroundColor: 'white',
-    borderRadius: 15,
+    padding: spacing.xl,
   },
   emptyStateText: {
     fontSize: 16,
-    color: '#666',
+    fontWeight: 'bold',
+    color: colors.textSecondary,
+    marginTop: spacing.md,
+  },
+  emptyStateSubtext: {
+    fontSize: 14,
+    color: colors.textMuted,
     textAlign: 'center',
-    marginVertical: 15,
+    marginTop: spacing.xs,
+  },
+  horizontalList: {
+    paddingRight: spacing.md,
+  },
+  card: {
+    marginBottom: spacing.md,
+    paddingHorizontal: 0,
+    paddingVertical: 0,
+    borderRadius: borderRadius.lg,
+    overflow: 'hidden',
+  },
+  cardImage: {
+    width: '100%',
+    height: 150,
+    borderTopLeftRadius: borderRadius.lg,
+    borderTopRightRadius: borderRadius.lg,
+  },
+  cardContent: {
+    padding: spacing.md,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.sm,
+  },
+  cardTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: colors.textPrimary,
+    flex: 1,
+    marginRight: spacing.sm,
+  },
+  categoryBadge: {
+    backgroundColor: colors.primary,
+  },
+  cardDescription: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    marginBottom: spacing.sm,
+    lineHeight: 20,
+  },
+  cardStats: {
+    flexDirection: 'column',
+    marginTop: spacing.xs,
+    backgroundColor: colors.cardDark,
+    padding: spacing.sm,
+    borderRadius: borderRadius.md,
+  },
+  cardStat: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing.xs,
+  },
+  cardStatText: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    marginLeft: spacing.xs,
   },
   createButton: {
-    backgroundColor: '#4285F4',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 20,
-    marginTop: 10,
+    marginTop: spacing.md,
   },
-  createButtonText: {
-    color: 'white',
-    fontWeight: 'bold',
-  },
-  upcomingChallengeCard: {
-    width: 200,
-    backgroundColor: 'white',
-    borderRadius: 15,
-    marginRight: 15,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  upcomingChallengeBadge: {
-    backgroundColor: '#FFC107',
-    paddingVertical: 3,
-    paddingHorizontal: 10,
-    alignSelf: 'flex-start',
-    borderBottomRightRadius: 10,
-  },
-  upcomingBadgeText: {
-    fontSize: 10,
-    fontWeight: 'bold',
-    color: 'white',
-  },
-  upcomingChallengeContent: {
-    flexDirection: 'row',
-    padding: 15,
-    alignItems: 'center',
-  },
-  upcomingChallengeIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#EAF2FF',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 15,
-  },
-  upcomingChallengeDetails: {
-    flex: 1,
-  },
-  upcomingChallengeTitle: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 5,
-  },
-  upcomingChallengeDate: {
-    fontSize: 12,
-    color: '#666',
-  },
-  upcomingList: {
-    paddingRight: 20,
-  },
-  createChallengeButton: {
-    backgroundColor: '#4285F4',
-    padding: 15,
-    borderRadius: 10,
-    alignItems: 'center',
-    marginBottom: 30,
-  },
-  createChallengeButtonText: {
-    color: 'white',
-    fontWeight: 'bold',
-    fontSize: 16,
-  }
 });
 
 export default HomeScreen; 

@@ -1,185 +1,119 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { FontAwesome5 } from '@expo/vector-icons';
 
-import LoginScreen from '../screens/LoginScreen';
-import HomeScreen from '../screens/HomeScreen';
-import VerifyEmailScreen from '../screens/VerifyEmailScreen';
-import ChallengeDetailsScreen from '../screens/ChallengeDetailsScreen';
-import JoinChallengeScreen from '../screens/JoinChallengeScreen';
-import { useAuth } from '../contexts/AuthContext';
+import { AuthContext } from '../context/AuthContext';
 import LoadingScreen from '../screens/LoadingScreen';
-import { RootStackParamList } from '../types/navigation';
+import LoginScreen from '../screens/LoginScreen';
+import SignupScreen from '../screens/SignupScreen';
+import VerifyEmailScreen from '../screens/VerifyEmailScreen';
+import HomeScreen from '../screens/HomeScreen';
+import ChallengeDetailsScreen from '../screens/ChallengeDetailsScreen';
+import ProgressTrackingScreen from '../screens/ProgressTrackingScreen';
+import RecordProgressScreen from '../screens/RecordProgressScreen';
+import LeaderboardScreen from '../screens/LeaderboardScreen';
+import CreateChallengeScreen from '../screens/CreateChallengeScreen';
+import { RootStackParamList } from '../types/navigationTypes';
 
-// Placeholder screens - in a real app these would be implemented
-const CreateChallengeScreen = () => <LoadingScreen />;
-const ProfileScreen = () => <LoadingScreen />;
-const ProgressTrackingScreen = () => <LoadingScreen />;
-const RecordProgressScreen = () => <LoadingScreen />;
-const LeaderboardScreen = () => <LoadingScreen />;
-const WalletScreen = () => <LoadingScreen />;
+// Create the stack navigators
+const Stack = createStackNavigator<RootStackParamList>();
+const Tab = createBottomTabNavigator<RootStackParamList>();
 
-const Stack = createNativeStackNavigator<RootStackParamList>();
+// Placeholder screens
+const ProfileScreen = () => <LoadingScreen message="Profile Screen (Coming Soon)" />;
+const DiscoverScreen = () => <LoadingScreen message="Discover Screen (Coming Soon)" />;
+const WalletScreen = () => <LoadingScreen message="Wallet Screen (Coming Soon)" />;
 
-// Define types for the tab navigator
-type TabParamList = {
-  HomeTab: undefined;
-  JoinTab: undefined;
-  CreateTab: undefined;
-  WalletTab: undefined;
-  ProfileTab: undefined;
+// HomeStack - for nested navigation within the Home tab
+const HomeStack = () => {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="Home" component={HomeScreen} />
+      <Stack.Screen name="ChallengeDetails" component={ChallengeDetailsScreen} />
+      <Stack.Screen name="Leaderboard" component={LeaderboardScreen} />
+      <Stack.Screen name="ProgressTracking" component={ProgressTrackingScreen} />
+      <Stack.Screen name="RecordProgress" component={RecordProgressScreen} />
+    </Stack.Navigator>
+  );
 };
 
-const Tab = createBottomTabNavigator<TabParamList>();
+// CreateStack - for nested navigation within the Create tab
+const CreateStack = () => {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="CreateChallenge" component={CreateChallengeScreen} />
+    </Stack.Navigator>
+  );
+};
 
 // Main tab navigator for authenticated users
 const MainTabs = () => {
   return (
     <Tab.Navigator
-      screenOptions={{
-        tabBarActiveTintColor: '#4285F4',
-        tabBarInactiveTintColor: '#999',
-        tabBarStyle: {
-          paddingBottom: 5,
-          paddingTop: 5,
-          height: 60,
+      screenOptions={({ route }) => ({
+        tabBarIcon: ({ focused, color, size }) => {
+          let iconName: string = 'home';
+          
+          if (route.name === 'HomeStack') {
+            iconName = 'home';
+          } else if (route.name === 'Discover') {
+            iconName = 'compass';
+          } else if (route.name === 'CreateStack') {
+            iconName = 'plus-circle';
+          } else if (route.name === 'Wallet') {
+            iconName = 'wallet';
+          } else if (route.name === 'Profile') {
+            iconName = 'user';
+          }
+          
+          return <FontAwesome5 name={iconName} size={size} color={color} />;
         },
+        tabBarActiveTintColor: '#007AFF',
+        tabBarInactiveTintColor: 'gray',
         headerShown: false,
-      }}
+      })}
     >
       <Tab.Screen 
-        name="HomeTab" 
+        name="HomeStack" 
         component={HomeStack} 
-        options={{
-          tabBarLabel: 'Home',
-          tabBarIcon: ({ color, size }: { color: string; size: number }) => (
-            <FontAwesome5 name="home" size={size} color={color} />
-          ),
-        }}
+        options={{ title: 'Home' }}
       />
+      <Tab.Screen name="Discover" component={DiscoverScreen} />
       <Tab.Screen 
-        name="JoinTab" 
-        component={DiscoverStack} 
-        options={{
-          tabBarLabel: 'Discover',
-          tabBarIcon: ({ color, size }: { color: string; size: number }) => (
-            <FontAwesome5 name="search" size={size} color={color} />
-          ),
-        }}
+        name="CreateStack" 
+        component={CreateStack}
+        options={{ title: 'Create' }}
       />
-      <Tab.Screen 
-        name="CreateTab" 
-        component={CreateChallengeScreen} 
-        options={{
-          tabBarLabel: 'Create',
-          tabBarIcon: ({ color, size }: { color: string; size: number }) => (
-            <FontAwesome5 name="plus-circle" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tab.Screen 
-        name="WalletTab" 
-        component={WalletScreen} 
-        options={{
-          tabBarLabel: 'Wallet',
-          tabBarIcon: ({ color, size }: { color: string; size: number }) => (
-            <FontAwesome5 name="wallet" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tab.Screen 
-        name="ProfileTab" 
-        component={ProfileScreen} 
-        options={{
-          tabBarLabel: 'Profile',
-          tabBarIcon: ({ color, size }: { color: string; size: number }) => (
-            <FontAwesome5 name="user" size={size} color={color} />
-          ),
-        }}
-      />
+      <Tab.Screen name="Wallet" component={WalletScreen} />
+      <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
   );
 };
 
-// Home stack for the Home tab
-const HomeStack = () => {
+// Authentication stack for unauthenticated users
+const AuthStack = () => {
   return (
-    <Stack.Navigator>
-      <Stack.Screen 
-        name="Home" 
-        component={HomeScreen} 
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen 
-        name="ChallengeDetails" 
-        component={ChallengeDetailsScreen} 
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen 
-        name="ProgressTracking" 
-        component={ProgressTrackingScreen} 
-        options={{ title: 'Progress Details' }}
-      />
-      <Stack.Screen 
-        name="RecordProgress" 
-        component={RecordProgressScreen} 
-        options={{ title: 'Record Progress' }}
-      />
-      <Stack.Screen 
-        name="Leaderboard" 
-        component={LeaderboardScreen} 
-        options={{ title: 'Leaderboard' }}
-      />
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="Login" component={LoginScreen} />
+      <Stack.Screen name="Signup" component={SignupScreen} />
+      <Stack.Screen name="VerifyEmail" component={VerifyEmailScreen} />
     </Stack.Navigator>
   );
 };
 
-// Discover stack for the Discover tab
-const DiscoverStack = () => {
-  return (
-    <Stack.Navigator>
-      <Stack.Screen 
-        name="JoinChallenge" 
-        component={JoinChallengeScreen} 
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen 
-        name="ChallengeDetails" 
-        component={ChallengeDetailsScreen} 
-        options={{ headerShown: false }}
-      />
-    </Stack.Navigator>
-  );
-};
-
-// Auth stack - screens for unauthenticated users
-const AuthStack = () => (
-  <Stack.Navigator>
-    <Stack.Screen 
-      name="Login" 
-      component={LoginScreen} 
-      options={{ headerShown: false }}
-    />
-    <Stack.Screen 
-      name="VerifyEmail" 
-      component={VerifyEmailScreen} 
-      options={{ title: 'Verify Email' }}
-    />
-  </Stack.Navigator>
-);
-
+// Main app navigator that conditionally renders auth or main screen based on login state
 const AppNavigator = () => {
-  const { user, loading } = useAuth();
+  const { isLoggedIn, isLoading } = useContext(AuthContext);
 
-  if (loading) {
-    return <LoadingScreen />;
+  if (isLoading) {
+    return <LoadingScreen message="Loading..." />;
   }
 
   return (
     <NavigationContainer>
-      {user ? <MainTabs /> : <AuthStack />}
+      {isLoggedIn ? <MainTabs /> : <AuthStack />}
     </NavigationContainer>
   );
 };
