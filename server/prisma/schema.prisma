@@ -17,6 +17,8 @@ model User {
   id            String         @id @default(uuid())
   email         String         @unique
   name          String
+  password      String?        // Password for email/password auth
+  emailVerified Boolean        @default(false) // Whether email is verified
   firebaseUid   String?        @unique // Firebase User ID for authentication
   profilePic    String?
   walletAddress String?        // Solana wallet address

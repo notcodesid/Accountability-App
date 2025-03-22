@@ -1,6 +1,99 @@
-# Accountability-as-a-Service Application
+# Accountability App
 
-A mobile-based application that leverages financial incentives and competition to drive goal completion. Users can commit to personal goals, stake money on their success, and compete with others to stay accountable.
+A platform that allows users to create and participate in challenges with financial incentives to help them stay accountable to their goals. Users can join challenges, track their progress, and earn rewards for successful completion.
+
+## Project Structure
+
+The application consists of two main parts:
+
+1. **Server**: Node.js/Express backend with TypeScript and PostgreSQL database
+2. **Client**: React Native mobile app with Expo and Firebase Authentication
+
+## Authentication Flow
+
+This application uses Firebase Authentication for user management:
+
+1. Users sign in with Google through Firebase in the React Native app
+2. After successful authentication, the app receives a Firebase ID token
+3. The app sends this token to the backend server
+4. The server verifies the token using Firebase Admin SDK
+5. The server finds or creates a user record in the database
+6. User is now authenticated and can access protected resources
+
+## Getting Started
+
+### Server Setup
+
+1. Navigate to the server directory:
+```bash
+cd server
+```
+
+2. Install dependencies:
+```bash
+npm install
+```
+
+3. Set up environment variables:
+Create a `.env` file in the server directory with:
+```
+DATABASE_URL="your-postgresql-connection-string"
+PORT=3000
+GOOGLE_APPLICATION_CREDENTIALS="/path/to/your/firebase-service-account.json"
+```
+
+4. Generate Prisma client:
+```bash
+npx prisma generate
+```
+
+5. Run database migrations:
+```bash
+npx prisma migrate dev
+```
+
+6. Start the server:
+```bash
+npm start
+```
+
+### Client Setup
+
+1. Navigate to the client directory:
+```bash
+cd client
+```
+
+2. Install dependencies:
+```bash
+npm install
+```
+
+3. Configure Firebase:
+   - Create a Firebase project and enable Google Authentication
+   - Update Firebase config in `src/config/firebase.ts`
+   - Configure Google Auth client IDs in `src/services/auth.ts`
+
+4. Start the Expo development server:
+```bash
+npm start
+```
+
+## Development
+
+### Server Development
+
+- Use TypeScript for type safety
+- Follow RESTful API design principles
+- Use Prisma for database operations
+- Firebase Admin SDK for token verification
+
+### Client Development
+
+- React Native with Expo for cross-platform mobile development
+- Firebase Authentication for user management
+- Expo Auth Session for Google Sign-In
+- React Navigation for app navigation
 
 ## Features
 
@@ -15,66 +108,6 @@ A mobile-based application that leverages financial incentives and competition t
 - **Database**: PostgreSQL
 - **Blockchain**: Solana (for secure financial transactions)
 - **Frontend**: (To be implemented, likely React Native)
-
-## Project Structure
-
-```
-.
-├── server/             # Backend API server
-│   ├── src/            # TypeScript source files
-│   │   ├── routes/     # API route definitions
-│   │   ├── middleware/ # Express middleware
-│   │   ├── types/      # TypeScript type definitions
-│   │   └── index.ts    # Entry point
-│   ├── prisma/         # Prisma ORM schema and migrations
-│   └── dist/           # Compiled JavaScript files
-└── client/             # Frontend application (to be implemented)
-```
-
-## Setup Instructions
-
-### Prerequisites
-
-- Node.js (v16+)
-- PostgreSQL database
-- Solana wallet/tools (for blockchain features)
-
-### Backend Setup
-
-1. Clone the repository:
-   ```bash
-   git clone <repository-url>
-   cd accountability
-   ```
-
-2. Install dependencies:
-   ```bash
-   cd server
-   npm install
-   ```
-
-3. Set up environment variables:
-   Create a `.env` file in the server directory with the following:
-   ```
-   DATABASE_URL="postgresql://username:password@localhost:5432/accountability"
-   JWT_SECRET="your-secret-key"
-   PORT=3000
-   ```
-
-4. Run database migrations:
-   ```bash
-   npx prisma migrate dev
-   ```
-
-5. Build the TypeScript code:
-   ```bash
-   npm run build
-   ```
-
-6. Start the server:
-   ```bash
-   npm start
-   ```
 
 ## API Endpoints
 
