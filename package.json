@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "@react-navigation/bottom-tabs": "^7.3.2"
+  }
+}
