@@ -1,64 +1,6 @@
-# Accountability App - React Native Client
+# Welcome to your Expo app 👋
 
-This is the React Native mobile app for the Accountability App, a platform that allows users to create and participate in challenges with financial incentives.
-
-## Technologies
-
-- React Native with Expo
-- TypeScript
-- Firebase Authentication (Google Sign-In)
-- React Navigation
-
-## Setup
-
-1. Install dependencies:
-```bash
-npm install
-```
-
-2. Configure Firebase Authentication:
-   - Create a Firebase project at [Firebase Console](https://console.firebase.google.com/)
-   - Enable Google Authentication in the Firebase Console
-   - Create a web app in your Firebase project
-   - Copy the Firebase config from the Firebase Console
-   - Update the config in `src/config/firebase.ts`
-
-3. Configure Google Auth:
-   - Go to Google Cloud Console and configure OAuth consent screen
-   - Create OAuth client IDs for Web, iOS, and Android platforms
-   - Update the client IDs in `src/services/auth.ts`
-
-4. For Expo development with Google Auth, follow these steps:
-   - Set up a Google API Console project 
-   - Configure OAuth consent screen
-   - Create OAuth client ID credentials (Web Application type)
-   - Set the authorized redirect URIs to include `https://auth.expo.io/@your-expo-username/your-app-slug`
-   - Update `app.json` with your Google client IDs
-
-5. Run the development server:
-```bash
-npm start
-```
-
-## API Integration
-
-The app is configured to connect to the backend server at `http://localhost:3000` by default. To change this:
-
-1. Update the `baseURL` in `src/services/api.ts` to point to your backend server
-
-## Authentication Flow
-
-1. User taps "Sign in with Google" button
-2. Firebase authentication handles Google sign-in flow
-3. Upon successful sign-in, the app sends the Firebase ID token to the backend server
-4. The backend validates the token and returns user information
-5. The app updates the authentication context with the user data
-
-## Adding Images
-
-You need to add these image files to the assets folder:
-- `assets/logo-placeholder.png`: App logo (120x120px recommended)
-- `assets/google-logo.png`: Google logo for sign-in button (24x24px)
+This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
 
 ## Get started
 

@@ -1,0 +1,1 @@
+Remember to add the onboard.png image to client/assets/images/ directory

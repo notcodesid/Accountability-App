@@ -6,6 +6,19 @@
 const tintColorLight = '#0a7ea4';
 const tintColorDark = '#fff';
 
+// Peloton-inspired colors for onboarding
+export const OnboardingColors = {
+  background: '#0d0d0c',        // Dark background color as specified
+  cardBackground: '#151515',
+  inputBackground: '#2C2C2E',
+  accentColor: '#FF5757',       // Accent color from image (reddish)
+  accentSecondary: '#FF7F50',   // Secondary accent for gradient effects
+  text: '#FFFFFF',
+  textSecondary: '#AAAAAA',
+  buttonText: '#FFFFFF',
+  border: '#333333',
+};
+
 export const Colors = {
   light: {
     text: '#11181C',
