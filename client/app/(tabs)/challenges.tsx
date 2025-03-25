@@ -1,122 +1,142 @@
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Image } from "react-native";
+import React, { useState } from 'react';
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, FlatList, StatusBar } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors } from '../../constants/Colors';
+import { Colors, HomeColors, OnboardingColors } from '../../constants/Colors';
+import { router } from 'expo-router';
 import SafeScreenView from '../../components/SafeScreenView';
+import { LinearGradient } from 'expo-linear-gradient';
 
-export default function Challenges() {
+// Define interface for challenge data
+interface Challenge {
+    id: string;
+    title: string;
+    type: string;
+    duration: string;
+    progress: number;
+    participants: number;
+    contribution: string;
+    prizePool: string;
+}
+
+// Sample data for challenges
+const CHALLENGES: Challenge[] = [
+    {
+        id: '1',
+        title: '10K Steps Daily',
+        type: 'Steps',
+        duration: '30 days',
+        progress: 0.75,
+        participants: 156,
+        contribution: '$50',
+        prizePool: '$7,800',
+    },
+    {
+        id: '2',
+        title: '5K Pace Challenge',
+        type: 'Running',
+        duration: '21 days',
+        progress: 0.45,
+        participants: 89,
+        contribution: '$75',
+        prizePool: '$6,675',
+    },
+    {
+        id: '3',
+        title: 'Active Minutes',
+        type: 'Activity',
+        duration: '14 days',
+        progress: 0.3,
+        participants: 124,
+        contribution: '$25',
+        prizePool: '$3,100',
+    },
+];
+
+export default function ChallengesScreen() {
+    const [activeTab, setActiveTab] = useState('active');
+
+    const renderChallengeItem = ({ item }: { item: Challenge }) => (
+        <TouchableOpacity style={styles.challengeCard} onPress={() => router.push(`/challenges/${item.id}` as any)}>
+            <View style={styles.challengeHeader}>
+                <View style={styles.challengeBadge}>
+                    <Ionicons name={item.type === 'Running' ? 'walk' : (item.type === 'Steps' ? 'footsteps' : 'fitness')} size={20} color="#fff" />
+                </View>
+                <View style={styles.challengeInfo}>
+                    <Text style={styles.challengeTitle}>{item.title}</Text>
+                    <Text style={styles.challengeMeta}>{item.type} • {item.duration}</Text>
+                </View>
+            </View>
+            
+            <View style={styles.progressContainer}>
+                <View style={[styles.progressBar, { width: `${item.progress * 100}%` }]} />
+            </View>
+            
+            <View style={styles.challengeStats}>
+                <View style={styles.statItem}>
+                    <Text style={styles.statValue}>{item.participants}</Text>
+                    <Text style={styles.statLabel}>Participants</Text>
+                </View>
+                <View style={styles.statItem}>
+                    <Text style={styles.statValue}>{item.contribution}</Text>
+                    <Text style={styles.statLabel}>Your Stake</Text>
+                </View>
+                <View style={styles.statItem}>
+                    <Text style={styles.statValue}>{item.prizePool}</Text>
+                    <Text style={styles.statLabel}>Prize Pool</Text>
+                </View>
+            </View>
+        </TouchableOpacity>
+    );
+
     return (
-        <SafeScreenView style={styles.container}>
-            <View style={styles.header}>
-                <Text style={styles.headerTitle}>Challenges</Text>
-                <Text style={styles.headerSubtitle}>Join or create accountability challenges</Text>
+        <SafeScreenView style={styles.container} backgroundColor={HomeColors.background}>
+            <StatusBar barStyle="light-content" />
+            
+            <View style={styles.selectedHeaderContainer}>
+                <LinearGradient
+                    colors={['rgba(23, 23, 23, 0.9)', 'rgba(10, 10, 10, 0.95)']}
+                    style={styles.headerGradient}
+                >
+                    <View style={styles.selectedHeaderContent}>
+                        <Text style={styles.selectedHeaderTitle}>My Challenges</Text>
+                        <Text style={styles.selectedHeaderDetails}>Track your progress and earnings</Text>
+                    </View>
+                </LinearGradient>
             </View>
-
+            
             <View style={styles.tabs}>
-                <TouchableOpacity style={[styles.tab, styles.activeTab]}>
-                    <Text style={[styles.tabText, styles.activeTabText]}>Active</Text>
+                <TouchableOpacity 
+                    style={[styles.tab, activeTab === 'active' && styles.activeTab]} 
+                    onPress={() => setActiveTab('active')}
+                >
+                    <Text style={[styles.tabText, activeTab === 'active' && styles.activeTabText]}>Active</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.tab}>
-                    <Text style={styles.tabText}>Discover</Text>
+                <TouchableOpacity 
+                    style={[styles.tab, activeTab === 'completed' && styles.activeTab]} 
+                    onPress={() => setActiveTab('completed')}
+                >
+                    <Text style={[styles.tabText, activeTab === 'completed' && styles.activeTabText]}>Completed</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.tab}>
-                    <Text style={styles.tabText}>Completed</Text>
-                </TouchableOpacity>
-            </View>
-
-            <View style={styles.challengesList}>
-                <TouchableOpacity style={styles.challengeCard}>
-                    <View style={styles.challengeHeader}>
-                        <View style={styles.challengeBadge}>
-                            <Ionicons name="fitness" size={20} color="#fff" />
-                        </View>
-                        <View style={styles.challengeInfo}>
-                            <Text style={styles.challengeTitle}>30 Day Fitness</Text>
-                            <Text style={styles.challengeMeta}>15 participants • Day 12 of 30</Text>
-                        </View>
-                        <Ionicons name="chevron-forward" size={20} color={Colors.light.icon} />
-                    </View>
-                    <View style={styles.progressContainer}>
-                        <View style={[styles.progressBar, { width: '40%' }]} />
-                    </View>
-                    <View style={styles.challengeStats}>
-                        <View style={styles.statItem}>
-                            <Text style={styles.statValue}>85%</Text>
-                            <Text style={styles.statLabel}>Completion</Text>
-                        </View>
-                        <View style={styles.statItem}>
-                            <Text style={styles.statValue}>12</Text>
-                            <Text style={styles.statLabel}>Streak</Text>
-                        </View>
-                        <View style={styles.statItem}>
-                            <Text style={styles.statValue}>350</Text>
-                            <Text style={styles.statLabel}>Points</Text>
-                        </View>
-                    </View>
-                </TouchableOpacity>
-
-                <TouchableOpacity style={styles.challengeCard}>
-                    <View style={styles.challengeHeader}>
-                        <View style={[styles.challengeBadge, { backgroundColor: '#4CAF50' }]}>
-                            <Ionicons name="book" size={20} color="#fff" />
-                        </View>
-                        <View style={styles.challengeInfo}>
-                            <Text style={styles.challengeTitle}>Reading Challenge</Text>
-                            <Text style={styles.challengeMeta}>8 participants • Day 5 of 21</Text>
-                        </View>
-                        <Ionicons name="chevron-forward" size={20} color={Colors.light.icon} />
-                    </View>
-                    <View style={styles.progressContainer}>
-                        <View style={[styles.progressBar, { width: '24%', backgroundColor: '#4CAF50' }]} />
-                    </View>
-                    <View style={styles.challengeStats}>
-                        <View style={styles.statItem}>
-                            <Text style={styles.statValue}>92%</Text>
-                            <Text style={styles.statLabel}>Completion</Text>
-                        </View>
-                        <View style={styles.statItem}>
-                            <Text style={styles.statValue}>5</Text>
-                            <Text style={styles.statLabel}>Streak</Text>
-                        </View>
-                        <View style={styles.statItem}>
-                            <Text style={styles.statValue}>120</Text>
-                            <Text style={styles.statLabel}>Points</Text>
-                        </View>
-                    </View>
-                </TouchableOpacity>
-
-                <TouchableOpacity style={styles.challengeCard}>
-                    <View style={styles.challengeHeader}>
-                        <View style={[styles.challengeBadge, { backgroundColor: '#2196F3' }]}>
-                            <Ionicons name="water" size={20} color="#fff" />
-                        </View>
-                        <View style={styles.challengeInfo}>
-                            <Text style={styles.challengeTitle}>Hydration Challenge</Text>
-                            <Text style={styles.challengeMeta}>23 participants • Day 8 of 14</Text>
-                        </View>
-                        <Ionicons name="chevron-forward" size={20} color={Colors.light.icon} />
-                    </View>
-                    <View style={styles.progressContainer}>
-                        <View style={[styles.progressBar, { width: '57%', backgroundColor: '#2196F3' }]} />
-                    </View>
-                    <View style={styles.challengeStats}>
-                        <View style={styles.statItem}>
-                            <Text style={styles.statValue}>78%</Text>
-                            <Text style={styles.statLabel}>Completion</Text>
-                        </View>
-                        <View style={styles.statItem}>
-                            <Text style={styles.statValue}>7</Text>
-                            <Text style={styles.statLabel}>Streak</Text>
-                        </View>
-                        <View style={styles.statItem}>
-                            <Text style={styles.statValue}>210</Text>
-                            <Text style={styles.statLabel}>Points</Text>
-                        </View>
-                    </View>
+                <TouchableOpacity 
+                    style={[styles.tab, activeTab === 'created' && styles.activeTab]} 
+                    onPress={() => setActiveTab('created')}
+                >
+                    <Text style={[styles.tabText, activeTab === 'created' && styles.activeTabText]}>Created</Text>
                 </TouchableOpacity>
             </View>
-
-            <TouchableOpacity style={styles.createButton}>
-                <Ionicons name="add" size={24} color="#fff" />
+            
+            <FlatList
+                data={CHALLENGES}
+                renderItem={renderChallengeItem}
+                keyExtractor={item => item.id}
+                contentContainerStyle={styles.challengesList}
+            />
+            
+            <TouchableOpacity 
+                style={styles.createButton} 
+                onPress={() => router.push('/create-challenge' as any)}
+            >
+                <Ionicons name="add-circle" size={20} color="#fff" />
                 <Text style={styles.createButtonText}>Create Challenge</Text>
             </TouchableOpacity>
         </SafeScreenView>
@@ -126,26 +146,33 @@ export default function Challenges() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f7f7f7',
     },
-    header: {
-        padding: 20,
-        backgroundColor: Colors.light.tint,
+    selectedHeaderContainer: {
+        width: '100%',
     },
-    headerTitle: {
-        fontSize: 24,
+    headerGradient: {
+        paddingTop: 40,
+        paddingBottom: 15,
+        paddingHorizontal: 20,
+    },
+    selectedHeaderContent: {
+        flexDirection: 'column',
+        position: 'relative',
+    },
+    selectedHeaderTitle: {
+        fontSize: 32,
         fontWeight: 'bold',
         color: '#fff',
-        marginBottom: 5,
+        marginBottom: 8,
     },
-    headerSubtitle: {
-        fontSize: 16,
-        color: 'rgba(255, 255, 255, 0.8)',
+    selectedHeaderDetails: {
+        fontSize: 14,
+        color: 'rgba(255, 255, 255, 0.7)',
     },
     tabs: {
         flexDirection: 'row',
-        backgroundColor: '#fff',
-        marginTop: 10,
+        backgroundColor: HomeColors.challengeCard,
+        marginTop: 20,
         marginBottom: 10,
         paddingVertical: 10,
     },
@@ -156,21 +183,21 @@ const styles = StyleSheet.create({
     },
     activeTab: {
         borderBottomWidth: 2,
-        borderBottomColor: Colors.light.tint,
+        borderBottomColor: OnboardingColors.accentColor,
     },
     tabText: {
         fontWeight: '500',
-        color: Colors.light.icon,
+        color: HomeColors.textSecondary,
     },
     activeTabText: {
-        color: Colors.light.tint,
+        color: OnboardingColors.accentColor,
     },
     challengesList: {
         paddingHorizontal: 15,
     },
     challengeCard: {
-        backgroundColor: '#fff',
-        borderRadius: 10,
+        backgroundColor: HomeColors.challengeCard,
+        borderRadius: 16,
         padding: 15,
         marginBottom: 15,
         shadowColor: '#000',
@@ -188,7 +215,7 @@ const styles = StyleSheet.create({
         width: 40,
         height: 40,
         borderRadius: 20,
-        backgroundColor: Colors.light.tint,
+        backgroundColor: OnboardingColors.accentColor,
         justifyContent: 'center',
         alignItems: 'center',
     },
@@ -199,22 +226,22 @@ const styles = StyleSheet.create({
     challengeTitle: {
         fontSize: 16,
         fontWeight: '600',
-        color: Colors.light.text,
+        color: HomeColors.text,
     },
     challengeMeta: {
         fontSize: 12,
-        color: Colors.light.icon,
+        color: HomeColors.textSecondary,
         marginTop: 2,
     },
     progressContainer: {
         height: 6,
-        backgroundColor: '#e0e0e0',
+        backgroundColor: '#333333',
         borderRadius: 3,
         marginBottom: 15,
     },
     progressBar: {
         height: '100%',
-        backgroundColor: Colors.light.tint,
+        backgroundColor: OnboardingColors.accentColor,
         borderRadius: 3,
     },
     challengeStats: {
@@ -228,17 +255,17 @@ const styles = StyleSheet.create({
     statValue: {
         fontSize: 16,
         fontWeight: 'bold',
-        color: Colors.light.text,
+        color: HomeColors.text,
     },
     statLabel: {
         fontSize: 12,
-        color: Colors.light.icon,
+        color: HomeColors.textSecondary,
         marginTop: 2,
     },
     createButton: {
         flexDirection: 'row',
-        backgroundColor: Colors.light.tint,
-        borderRadius: 25,
+        backgroundColor: OnboardingColors.accentColor,
+        borderRadius: 30,
         padding: 15,
         justifyContent: 'center',
         alignItems: 'center',

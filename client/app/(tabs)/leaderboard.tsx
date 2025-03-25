@@ -1,7 +1,8 @@
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Image } from "react-native";
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Image, StatusBar } from "react-native";
 import { Ionicons } from '@expo/vector-icons';
-import { Colors } from '../../constants/Colors';
+import { Colors, HomeColors, OnboardingColors } from '../../constants/Colors';
 import SafeScreenView from '../../components/SafeScreenView';
+import { LinearGradient } from 'expo-linear-gradient';
 
 export default function Leaderboard() {
     // Sample data for the leaderboard
@@ -22,10 +23,19 @@ export default function Leaderboard() {
     const myProfile = { name: 'You', points: 2050, avatar: 'https://randomuser.me/api/portraits/lego/1.jpg', rank: 6 };
 
     return (
-        <SafeScreenView style={styles.container}>
-            <View style={styles.header}>
-                <Text style={styles.headerTitle}>Leaderboard</Text>
-                <Text style={styles.headerSubtitle}>Top performers this month</Text>
+        <SafeScreenView style={styles.container} backgroundColor={HomeColors.background}>
+            <StatusBar barStyle="light-content" />
+            
+            <View style={styles.selectedHeaderContainer}>
+                <LinearGradient
+                    colors={['rgba(23, 23, 23, 0.9)', 'rgba(10, 10, 10, 0.95)']}
+                    style={styles.headerGradient}
+                >
+                    <View style={styles.selectedHeaderContent}>
+                        <Text style={styles.selectedHeaderTitle}>Leaderboard</Text>
+                        <Text style={styles.selectedHeaderDetails}>Top performers this month</Text>
+                    </View>
+                </LinearGradient>
             </View>
 
             <View style={styles.tabs}>
@@ -93,26 +103,33 @@ export default function Leaderboard() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f7f7f7',
     },
-    header: {
-        padding: 20,
-        backgroundColor: Colors.light.tint,
+    selectedHeaderContainer: {
+        width: '100%',
     },
-    headerTitle: {
-        fontSize: 24,
+    headerGradient: {
+        paddingTop: 40,
+        paddingBottom: 15,
+        paddingHorizontal: 20,
+    },
+    selectedHeaderContent: {
+        flexDirection: 'column',
+        position: 'relative',
+    },
+    selectedHeaderTitle: {
+        fontSize: 32,
         fontWeight: 'bold',
         color: '#fff',
-        marginBottom: 5,
+        marginBottom: 8,
     },
-    headerSubtitle: {
-        fontSize: 16,
-        color: 'rgba(255, 255, 255, 0.8)',
+    selectedHeaderDetails: {
+        fontSize: 14,
+        color: 'rgba(255, 255, 255, 0.7)',
     },
     tabs: {
         flexDirection: 'row',
-        backgroundColor: '#fff',
-        marginTop: 10,
+        backgroundColor: HomeColors.challengeCard,
+        marginTop: 20,
         paddingVertical: 10,
     },
     tab: {
@@ -122,20 +139,20 @@ const styles = StyleSheet.create({
     },
     activeTab: {
         borderBottomWidth: 2,
-        borderBottomColor: Colors.light.tint,
+        borderBottomColor: OnboardingColors.accentColor,
     },
     tabText: {
         fontWeight: '500',
-        color: Colors.light.icon,
+        color: HomeColors.textSecondary,
     },
     activeTabText: {
-        color: Colors.light.tint,
+        color: OnboardingColors.accentColor,
     },
     topThree: {
         flexDirection: 'row',
         justifyContent: 'center',
         alignItems: 'flex-end',
-        backgroundColor: '#fff',
+        backgroundColor: HomeColors.challengeCard,
         paddingBottom: 20,
         paddingHorizontal: 15,
         marginBottom: 10,
@@ -159,7 +176,7 @@ const styles = StyleSheet.create({
         position: 'absolute',
         top: 0,
         right: '25%',
-        backgroundColor: Colors.light.tint,
+        backgroundColor: OnboardingColors.accentColor,
         width: 24,
         height: 24,
         borderRadius: 12,
@@ -167,7 +184,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         zIndex: 4,
         borderWidth: 2,
-        borderColor: '#fff',
+        borderColor: HomeColors.challengeCard,
     },
     rankText: {
         color: '#fff',
@@ -179,7 +196,7 @@ const styles = StyleSheet.create({
         height: 70,
         borderRadius: 35,
         borderWidth: 3,
-        borderColor: '#fff',
+        borderColor: HomeColors.background,
     },
     userName: {
         fontWeight: 'bold',
@@ -187,6 +204,7 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         fontSize: 13,
         width: '90%',
+        color: HomeColors.text,
     },
     pointsContainer: {
         flexDirection: 'row',
@@ -196,11 +214,11 @@ const styles = StyleSheet.create({
     pointsText: {
         fontSize: 12,
         marginLeft: 3,
-        color: Colors.light.icon,
+        color: HomeColors.textSecondary,
     },
     rankingsList: {
         flex: 1,
-        backgroundColor: '#fff',
+        backgroundColor: HomeColors.challengeCard,
     },
     rankItem: {
         flexDirection: 'row',
@@ -208,13 +226,13 @@ const styles = StyleSheet.create({
         paddingVertical: 12,
         paddingHorizontal: 15,
         borderBottomWidth: 1,
-        borderBottomColor: '#f0f0f0',
+        borderBottomColor: 'rgba(255, 255, 255, 0.05)',
     },
     rankNumber: {
         width: 30,
         fontSize: 16,
         fontWeight: 'bold',
-        color: Colors.light.icon,
+        color: HomeColors.textSecondary,
     },
     smallAvatar: {
         width: 40,
@@ -226,6 +244,7 @@ const styles = StyleSheet.create({
         marginLeft: 12,
         fontSize: 15,
         fontWeight: '500',
+        color: HomeColors.text,
     },
     rankPoints: {
         flexDirection: 'row',
@@ -235,19 +254,20 @@ const styles = StyleSheet.create({
         fontSize: 14,
         marginLeft: 4,
         fontWeight: 'bold',
+        color: HomeColors.text,
     },
     myRankCard: {
-        backgroundColor: '#f5f8ff',
+        backgroundColor: 'rgba(255, 87, 87, 0.1)', // Subtle accent color background
         borderTopWidth: 1,
-        borderTopColor: '#e0e0e0',
+        borderTopColor: 'rgba(255, 87, 87, 0.2)',
     },
     myRankNumber: {
-        color: Colors.light.tint,
+        color: OnboardingColors.accentColor,
     },
     myRankName: {
         fontWeight: 'bold',
     },
     myRankPointsText: {
-        color: Colors.light.tint,
+        color: OnboardingColors.accentColor,
     },
 });

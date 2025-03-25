@@ -1,6 +1,6 @@
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors, TabColors, OnboardingColors } from '../../constants/Colors';
+import { Colors, TabColors, OnboardingColors, HomeColors } from '../../constants/Colors';
 import { StyleSheet, View, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import React from 'react';
@@ -35,7 +35,7 @@ export default function TabLayout() {
           paddingBottom: bottomInset,
           shadowColor: '#000',
           shadowOffset: { width: 0, height: -1 },
-          shadowOpacity: 0.2,
+          shadowOpacity: 0.25,
           shadowRadius: 3,
           elevation: 10,
         },
@@ -95,5 +95,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     width: '100%',
     height: 24,
+    position: 'relative',
   }
 });

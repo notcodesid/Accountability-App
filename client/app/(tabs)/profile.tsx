@@ -1,11 +1,26 @@
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Image } from "react-native";
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Image, StatusBar } from "react-native";
 import { Ionicons } from '@expo/vector-icons';
-import { Colors } from '../../constants/Colors';
+import { Colors, HomeColors, OnboardingColors } from '../../constants/Colors';
 import SafeScreenView from '../../components/SafeScreenView';
+import { LinearGradient } from 'expo-linear-gradient';
 
 export default function Profile() {
     return (
-        <SafeScreenView style={styles.container}>
+        <SafeScreenView style={styles.container} backgroundColor={HomeColors.background}>
+            <StatusBar barStyle="light-content" />
+            
+            <View style={styles.selectedHeaderContainer}>
+                <LinearGradient
+                    colors={['rgba(23, 23, 23, 0.9)', 'rgba(10, 10, 10, 0.95)']}
+                    style={styles.headerGradient}
+                >
+                    <View style={styles.selectedHeaderContent}>
+                        <Text style={styles.selectedHeaderTitle}>Profile</Text>
+                        <Text style={styles.selectedHeaderDetails}>Your account information</Text>
+                    </View>
+                </LinearGradient>
+            </View>
+
             <View style={styles.profileHeader}>
                 <Image 
                     source={{ uri: 'https://randomuser.me/api/portraits/lego/1.jpg' }} 
@@ -48,7 +63,7 @@ export default function Profile() {
                     </View>
                     
                     <View style={styles.achievementCard}>
-                        <View style={[styles.achievementIcon, { backgroundColor: '#4CAF50' }]}>
+                        <View style={[styles.achievementIcon, { backgroundColor: OnboardingColors.accentSecondary }]}>
                             <Ionicons name="flame" size={24} color="#FFF" />
                         </View>
                         <Text style={styles.achievementTitle}>30-Day Streak</Text>
@@ -78,7 +93,7 @@ export default function Profile() {
                 
                 <View style={styles.activityItem}>
                     <View style={styles.activityLeft}>
-                        <View style={[styles.activityDot, { backgroundColor: Colors.light.tint }]} />
+                        <View style={[styles.activityDot, { backgroundColor: OnboardingColors.accentColor }]} />
                         <View style={styles.activityLine} />
                     </View>
                     <View style={styles.activityContent}>
@@ -92,7 +107,7 @@ export default function Profile() {
                 
                 <View style={styles.activityItem}>
                     <View style={styles.activityLeft}>
-                        <View style={[styles.activityDot, { backgroundColor: '#4CAF50' }]} />
+                        <View style={[styles.activityDot, { backgroundColor: OnboardingColors.accentSecondary }]} />
                         <View style={styles.activityLine} />
                     </View>
                     <View style={styles.activityContent}>
@@ -141,31 +156,31 @@ export default function Profile() {
                 <Text style={styles.sectionTitle}>Settings</Text>
                 
                 <TouchableOpacity style={styles.settingItem}>
-                    <Ionicons name="notifications-outline" size={24} color={Colors.light.icon} />
+                    <Ionicons name="notifications-outline" size={24} color={HomeColors.text} />
                     <Text style={styles.settingText}>Notifications</Text>
-                    <Ionicons name="chevron-forward" size={18} color={Colors.light.icon} />
+                    <Ionicons name="chevron-forward" size={18} color={HomeColors.textSecondary} />
                 </TouchableOpacity>
                 
                 <TouchableOpacity style={styles.settingItem}>
-                    <Ionicons name="lock-closed-outline" size={24} color={Colors.light.icon} />
+                    <Ionicons name="lock-closed-outline" size={24} color={HomeColors.text} />
                     <Text style={styles.settingText}>Privacy</Text>
-                    <Ionicons name="chevron-forward" size={18} color={Colors.light.icon} />
+                    <Ionicons name="chevron-forward" size={18} color={HomeColors.textSecondary} />
                 </TouchableOpacity>
                 
                 <TouchableOpacity style={styles.settingItem}>
-                    <Ionicons name="help-circle-outline" size={24} color={Colors.light.icon} />
+                    <Ionicons name="help-circle-outline" size={24} color={HomeColors.text} />
                     <Text style={styles.settingText}>Help & Support</Text>
-                    <Ionicons name="chevron-forward" size={18} color={Colors.light.icon} />
+                    <Ionicons name="chevron-forward" size={18} color={HomeColors.textSecondary} />
                 </TouchableOpacity>
                 
                 <TouchableOpacity style={styles.settingItem}>
-                    <Ionicons name="information-circle-outline" size={24} color={Colors.light.icon} />
+                    <Ionicons name="information-circle-outline" size={24} color={HomeColors.text} />
                     <Text style={styles.settingText}>About</Text>
-                    <Ionicons name="chevron-forward" size={18} color={Colors.light.icon} />
+                    <Ionicons name="chevron-forward" size={18} color={HomeColors.textSecondary} />
                 </TouchableOpacity>
                 
                 <TouchableOpacity style={styles.logoutButton}>
-                    <Ionicons name="log-out-outline" size={20} color="#FF3B30" />
+                    <Ionicons name="log-out-outline" size={20} color={OnboardingColors.accentColor} />
                     <Text style={styles.logoutText}>Log Out</Text>
                 </TouchableOpacity>
             </View>
@@ -176,16 +191,38 @@ export default function Profile() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f7f7f7',
+    },
+    selectedHeaderContainer: {
+        width: '100%',
+    },
+    headerGradient: {
+        paddingTop: 40,
+        paddingBottom: 15,
+        paddingHorizontal: 20,
+    },
+    selectedHeaderContent: {
+        flexDirection: 'column',
+        position: 'relative',
+    },
+    selectedHeaderTitle: {
+        fontSize: 32,
+        fontWeight: 'bold',
+        color: '#fff',
+        marginBottom: 8,
+    },
+    selectedHeaderDetails: {
+        fontSize: 14,
+        color: 'rgba(255, 255, 255, 0.7)',
     },
     profileHeader: {
-        backgroundColor: '#fff',
+        backgroundColor: HomeColors.challengeCard,
         paddingTop: 30,
         paddingBottom: 20,
         paddingHorizontal: 20,
         alignItems: 'center',
         borderBottomWidth: 1,
-        borderBottomColor: '#eee',
+        borderBottomColor: 'rgba(255, 255, 255, 0.05)',
+        marginTop: 20,
     },
     profileImage: {
         width: 100,
@@ -193,17 +230,17 @@ const styles = StyleSheet.create({
         borderRadius: 50,
         marginBottom: 15,
         borderWidth: 3,
-        borderColor: Colors.light.tint,
+        borderColor: OnboardingColors.accentColor,
     },
     profileName: {
         fontSize: 22,
         fontWeight: 'bold',
         marginBottom: 5,
-        color: Colors.light.text,
+        color: HomeColors.text,
     },
     profileBio: {
         fontSize: 14,
-        color: Colors.light.icon,
+        color: HomeColors.textSecondary,
         textAlign: 'center',
         paddingHorizontal: 10,
     },
@@ -220,31 +257,31 @@ const styles = StyleSheet.create({
     statValue: {
         fontSize: 18,
         fontWeight: 'bold',
-        color: Colors.light.text,
+        color: HomeColors.text,
     },
     statLabel: {
         fontSize: 12,
-        color: Colors.light.icon,
+        color: HomeColors.textSecondary,
         marginTop: 4,
     },
     divider: {
         width: 1,
         height: '100%',
-        backgroundColor: '#eee',
+        backgroundColor: 'rgba(255, 255, 255, 0.1)',
     },
     editButton: {
         borderWidth: 1,
-        borderColor: Colors.light.tint,
+        borderColor: OnboardingColors.accentColor,
         borderRadius: 20,
         paddingVertical: 8,
         paddingHorizontal: 20,
     },
     editButtonText: {
-        color: Colors.light.tint,
+        color: OnboardingColors.accentColor,
         fontWeight: '500',
     },
     sectionContainer: {
-        backgroundColor: '#fff',
+        backgroundColor: HomeColors.challengeCard,
         padding: 20,
         marginTop: 10,
     },
@@ -252,115 +289,115 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontWeight: 'bold',
         marginBottom: 15,
-        color: Colors.light.text,
+        color: HomeColors.text,
     },
     achievementsContainer: {
-        marginLeft: -5,
+        marginBottom: 10,
     },
     achievementCard: {
-        width: 140,
-        marginRight: 15,
-        backgroundColor: '#fff',
+        backgroundColor: 'rgba(255, 255, 255, 0.05)',
         borderRadius: 10,
         padding: 15,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.1,
-        shadowRadius: 2,
-        elevation: 2,
+        marginRight: 15,
+        width: 150,
     },
     achievementIcon: {
         width: 50,
         height: 50,
         borderRadius: 25,
-        backgroundColor: 'rgba(255, 215, 0, 0.2)',
+        backgroundColor: '#FFC107',
         justifyContent: 'center',
         alignItems: 'center',
         marginBottom: 10,
     },
     achievementTitle: {
-        fontSize: 14,
+        fontSize: 16,
         fontWeight: 'bold',
         marginBottom: 5,
-        color: Colors.light.text,
+        color: HomeColors.text,
     },
     achievementDescription: {
         fontSize: 12,
-        color: Colors.light.icon,
+        color: HomeColors.textSecondary,
     },
     activityItem: {
         flexDirection: 'row',
         marginBottom: 20,
     },
     activityLeft: {
-        width: 20,
         alignItems: 'center',
+        width: 30,
     },
     activityDot: {
-        width: 10,
-        height: 10,
-        borderRadius: 5,
-        marginTop: 5,
+        width: 12,
+        height: 12,
+        borderRadius: 6,
+        backgroundColor: OnboardingColors.accentColor,
     },
     activityLine: {
-        width: 1,
+        width: 2,
         flex: 1,
-        backgroundColor: '#e0e0e0',
-        marginTop: 2,
+        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+        marginTop: 4,
+        marginBottom: 4,
     },
     activityContent: {
         flex: 1,
-        marginLeft: 10,
+        paddingLeft: 10,
     },
     activityTitle: {
-        fontWeight: 'bold',
-        color: Colors.light.text,
+        fontSize: 16,
+        fontWeight: '500',
+        marginBottom: 4,
+        color: HomeColors.text,
     },
     activityTimestamp: {
         fontSize: 12,
-        color: Colors.light.icon,
+        color: HomeColors.textSecondary,
         marginBottom: 8,
     },
     activityCard: {
-        backgroundColor: '#f7f7f7',
-        borderRadius: 10,
-        padding: 10,
+        backgroundColor: 'rgba(255, 255, 255, 0.05)',
+        borderRadius: 8,
+        padding: 12,
     },
     activityDetail: {
-        fontSize: 13,
-        color: Colors.light.text,
+        fontSize: 14,
+        color: HomeColors.text,
     },
     viewMoreButton: {
         alignItems: 'center',
         paddingVertical: 10,
+        marginTop: 10,
     },
     viewMoreText: {
-        color: Colors.light.tint,
+        color: OnboardingColors.accentColor,
         fontWeight: '500',
     },
     settingItem: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingVertical: 12,
+        paddingVertical: 15,
         borderBottomWidth: 1,
-        borderBottomColor: '#f0f0f0',
+        borderBottomColor: 'rgba(255, 255, 255, 0.05)',
     },
     settingText: {
-        fontSize: 16,
-        color: Colors.light.text,
         flex: 1,
         marginLeft: 15,
+        fontSize: 16,
+        color: HomeColors.text,
     },
     logoutButton: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        marginTop: 15,
-        paddingVertical: 12,
+        marginTop: 20,
+        paddingVertical: 15,
     },
     logoutText: {
-        color: '#FF3B30',
+        color: OnboardingColors.accentColor,
         fontWeight: '500',
         marginLeft: 8,
-    },
+        fontSize: 16,
+    }
 });

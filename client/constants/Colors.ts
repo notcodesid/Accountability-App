@@ -33,10 +33,10 @@ export const HomeColors = {
 
 // Tab navigation specific colors
 export const TabColors = {
-  tabBarBackground: '#2B2B2C',  // Dark gray for tab bar background
-  tabIconActive: '#FEFEFE',     // Almost white for active tabs
-  tabIconInactive: '#7E7E80',   // Gray for inactive tabs
-  indicator: OnboardingColors.accentColor, // Using accent color for indicator
+  tabBarBackground: '#010001',  // Match the main background color from HomeColors
+  tabIconActive: OnboardingColors.accentColor, // Use accent color for active tabs
+  tabIconInactive: '#8a8891',   // Use secondary text color from HomeColors
+  indicator: OnboardingColors.accentColor, // Keep accent color for indicator
 };
 
 export const Colors = {
