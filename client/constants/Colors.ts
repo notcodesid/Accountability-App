@@ -19,6 +19,18 @@ export const OnboardingColors = {
   border: '#333333',
 };
 
+// Home screen specific colors
+export const HomeColors = {
+  header: '#3b3a23',            // Header background color
+  background: '#010001',        // Main background color
+  challengeCard: '#18181a',     // Challenge card background
+  text: '#c4c2c9',              // Primary text color
+  textSecondary: '#8a8891',     // Secondary text color
+  button: '#252329',            // Button background color
+  buttonText: '#ffffff',        // Button text color
+  accent: '#FF5757',            // Accent color (using the same as onboarding for consistency)
+};
+
 // Tab navigation specific colors
 export const TabColors = {
   tabBarBackground: '#2B2B2C',  // Dark gray for tab bar background
