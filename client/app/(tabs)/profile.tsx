@@ -1,10 +1,11 @@
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Image } from "react-native";
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../constants/Colors';
+import SafeScreenView from '../../components/SafeScreenView';
 
 export default function Profile() {
     return (
-        <ScrollView style={styles.container}>
+        <SafeScreenView style={styles.container}>
             <View style={styles.profileHeader}>
                 <Image 
                     source={{ uri: 'https://randomuser.me/api/portraits/lego/1.jpg' }} 
@@ -168,7 +169,7 @@ export default function Profile() {
                     <Text style={styles.logoutText}>Log Out</Text>
                 </TouchableOpacity>
             </View>
-        </ScrollView>
+        </SafeScreenView>
     );
 }
 

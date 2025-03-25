@@ -1,10 +1,11 @@
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Image } from "react-native";
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../constants/Colors';
+import SafeScreenView from '../../components/SafeScreenView';
 
 export default function Challenges() {
     return (
-        <ScrollView style={styles.container}>
+        <SafeScreenView style={styles.container}>
             <View style={styles.header}>
                 <Text style={styles.headerTitle}>Challenges</Text>
                 <Text style={styles.headerSubtitle}>Join or create accountability challenges</Text>
@@ -118,7 +119,7 @@ export default function Challenges() {
                 <Ionicons name="add" size={24} color="#fff" />
                 <Text style={styles.createButtonText}>Create Challenge</Text>
             </TouchableOpacity>
-        </ScrollView>
+        </SafeScreenView>
     );
 }
 

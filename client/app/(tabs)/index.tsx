@@ -1,10 +1,11 @@
 import { StyleSheet, Text, View, ScrollView } from "react-native";
 import { Ionicons } from '@expo/vector-icons';
-import { Colors } from '../../constants/Colors';
+import { Colors, OnboardingColors } from '../../constants/Colors';
+import SafeScreenView from '../../components/SafeScreenView';
 
 export default function Home() {
     return (
-        <ScrollView style={styles.container}>
+        <SafeScreenView style={styles.container}>
             <View style={styles.header}>
                 <Text style={styles.headerTitle}>Welcome to Accountability</Text>
                 <Text style={styles.headerSubtitle}>Track your goals and stay accountable</Text>
@@ -65,7 +66,7 @@ export default function Home() {
                     <Ionicons name="time-outline" size={24} color="#FF9800" />
                 </View>
             </View>
-        </ScrollView>
+        </SafeScreenView>
     );
 }
 

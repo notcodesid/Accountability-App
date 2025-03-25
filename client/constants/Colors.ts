@@ -19,6 +19,14 @@ export const OnboardingColors = {
   border: '#333333',
 };
 
+// Tab navigation specific colors
+export const TabColors = {
+  tabBarBackground: '#2B2B2C',  // Dark gray for tab bar background
+  tabIconActive: '#FEFEFE',     // Almost white for active tabs
+  tabIconInactive: '#7E7E80',   // Gray for inactive tabs
+  indicator: OnboardingColors.accentColor, // Using accent color for indicator
+};
+
 export const Colors = {
   light: {
     text: '#11181C',
@@ -33,7 +41,7 @@ export const Colors = {
     background: '#151718',
     tint: tintColorDark,
     icon: '#9BA1A6',
-    tabIconDefault: '#9BA1A6',
-    tabIconSelected: tintColorDark,
+    tabIconDefault: TabColors.tabIconInactive,
+    tabIconSelected: TabColors.tabIconActive,
   },
 };

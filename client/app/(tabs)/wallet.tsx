@@ -1,10 +1,11 @@
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Image } from "react-native";
+import { StyleSheet, Text, View, TouchableOpacity, Image, ScrollView } from "react-native";
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../constants/Colors';
+import SafeScreenView from '../../components/SafeScreenView';
 
 export default function Wallet() {
     return (
-        <ScrollView style={styles.container}>
+        <SafeScreenView style={styles.container}>
             <View style={styles.header}>
                 <Text style={styles.headerTitle}>Wallet</Text>
                 <Text style={styles.headerSubtitle}>Manage your accountability tokens</Text>
@@ -202,7 +203,7 @@ export default function Wallet() {
                     </View>
                 </View>
             </View>
-        </ScrollView>
+        </SafeScreenView>
     );
 }
 

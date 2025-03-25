@@ -1,6 +1,7 @@
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Image } from "react-native";
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../constants/Colors';
+import SafeScreenView from '../../components/SafeScreenView';
 
 export default function Leaderboard() {
     // Sample data for the leaderboard
@@ -21,7 +22,7 @@ export default function Leaderboard() {
     const myProfile = { name: 'You', points: 2050, avatar: 'https://randomuser.me/api/portraits/lego/1.jpg', rank: 6 };
 
     return (
-        <View style={styles.container}>
+        <SafeScreenView style={styles.container}>
             <View style={styles.header}>
                 <Text style={styles.headerTitle}>Leaderboard</Text>
                 <Text style={styles.headerSubtitle}>Top performers this month</Text>
@@ -85,7 +86,7 @@ export default function Leaderboard() {
                     </View>
                 </View>
             </View>
-        </View>
+        </SafeScreenView>
     );
 }
 
