@@ -1,12 +1,21 @@
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Image, StatusBar } from "react-native";
+import { StyleSheet, Text, View, FlatList, TouchableOpacity, Image, StatusBar } from "react-native";
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, HomeColors, OnboardingColors } from '../../constants/Colors';
 import SafeScreenView from '../../components/SafeScreenView';
 import { LinearGradient } from 'expo-linear-gradient';
 
+// Define interface for leaderboard user data
+interface LeaderboardUser {
+    id: number;
+    name: string;
+    points: number;
+    avatar: string;
+    rank: number;
+}
+
 export default function Leaderboard() {
     // Sample data for the leaderboard
-    const leaderboardData = [
+    const leaderboardData: LeaderboardUser[] = [
         { id: 1, name: 'Goku', points: 2850, avatar: 'https://i.pinimg.com/736x/e2/f0/6c/e2f06c9101dc22814be2a2352f7dc871.jpg', rank: 1 },
         { id: 2, name: 'Luffy', points: 2720, avatar: 'https://i.pinimg.com/736x/0d/98/b2/0d98b2916254548f2c79a57eb8768969.jpg', rank: 2 },
         { id: 3, name: 'Levi Ackerman', points: 2540, avatar: 'https://i.pinimg.com/736x/49/0c/9e/490c9ef127fca74c07c339a998e96286.jpg', rank: 3 },
@@ -20,7 +29,20 @@ export default function Leaderboard() {
     ];
 
     // My profile data
-    const myProfile = { name: 'You', points: 2050, avatar: 'https://pbs.twimg.com/profile_images/1900043039831449603/EzgPL3sp_400x400.jpg', rank: 34 };
+    const myProfile: LeaderboardUser = { id: 0, name: 'You', points: 2050, avatar: 'https://pbs.twimg.com/profile_images/1900043039831449603/EzgPL3sp_400x400.jpg', rank: 34 };
+
+    // Render a ranking item for positions 4 and below
+    const renderRankItem = ({ item }: { item: LeaderboardUser }) => (
+        <View style={styles.rankItem}>
+            <Text style={styles.rankNumber}>{item.rank}</Text>
+            <Image source={{ uri: item.avatar }} style={styles.smallAvatar} />
+            <Text style={styles.rankName}>{item.name}</Text>
+            <View style={styles.rankPoints}>
+                <Ionicons name="star" size={14} color="#FFD700" />
+                <Text style={styles.rankPointsText}>{item.points}</Text>
+            </View>
+        </View>
+    );
 
     return (
         <SafeScreenView style={styles.container} backgroundColor={HomeColors.background}>
@@ -79,31 +101,25 @@ export default function Leaderboard() {
                 </View>
             </View>
 
-            <ScrollView style={styles.rankingsList}>
-                {leaderboardData.slice(3).map((user) => (
-                    <View key={user.id} style={styles.rankItem}>
-                        <Text style={styles.rankNumber}>{user.rank}</Text>
-                        <Image source={{ uri: user.avatar }} style={styles.smallAvatar} />
-                        <Text style={styles.rankName}>{user.name}</Text>
-                        <View style={styles.rankPoints}>
-                            <Ionicons name="star" size={14} color="#FFD700" />
-                            <Text style={styles.rankPointsText}>{user.points}</Text>
+            <FlatList
+                data={leaderboardData.slice(3)}
+                renderItem={renderRankItem}
+                keyExtractor={item => item.id.toString()}
+                style={styles.rankingsList}
+                ListFooterComponent={
+                    <View style={styles.myRankCard}>
+                        <View style={styles.rankItem}>
+                            <Text style={[styles.rankNumber, styles.myRankNumber]}>{myProfile.rank}</Text>
+                            <Image source={{ uri: myProfile.avatar }} style={styles.smallAvatar} />
+                            <Text style={[styles.rankName, styles.myRankName]}>{myProfile.name}</Text>
+                            <View style={styles.rankPoints}>
+                                <Ionicons name="star" size={14} color="#FFD700" />
+                                <Text style={[styles.rankPointsText, styles.myRankPointsText]}>{myProfile.points}</Text>
+                            </View>
                         </View>
                     </View>
-                ))}
-            </ScrollView>
-
-            <View style={styles.myRankCard}>
-                <View style={styles.rankItem}>
-                    <Text style={[styles.rankNumber, styles.myRankNumber]}>{myProfile.rank}</Text>
-                    <Image source={{ uri: myProfile.avatar }} style={styles.smallAvatar} />
-                    <Text style={[styles.rankName, styles.myRankName]}>{myProfile.name}</Text>
-                    <View style={styles.rankPoints}>
-                        <Ionicons name="star" size={14} color="#FFD700" />
-                        <Text style={[styles.rankPointsText, styles.myRankPointsText]}>{myProfile.points}</Text>
-                    </View>
-                </View>
-            </View>
+                }
+            />
         </SafeScreenView>
     );
 }
