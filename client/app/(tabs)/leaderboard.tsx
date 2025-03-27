@@ -7,20 +7,20 @@ import { LinearGradient } from 'expo-linear-gradient';
 export default function Leaderboard() {
     // Sample data for the leaderboard
     const leaderboardData = [
-        { id: 1, name: 'Sarah Johnson', points: 2850, avatar: 'https://randomuser.me/api/portraits/women/44.jpg', rank: 1 },
-        { id: 2, name: 'David Chen', points: 2720, avatar: 'https://randomuser.me/api/portraits/men/32.jpg', rank: 2 },
-        { id: 3, name: 'Aisha Patel', points: 2540, avatar: 'https://randomuser.me/api/portraits/women/65.jpg', rank: 3 },
-        { id: 4, name: 'James Wilson', points: 2350, avatar: 'https://randomuser.me/api/portraits/men/75.jpg', rank: 4 },
-        { id: 5, name: 'Miguel Santos', points: 2180, avatar: 'https://randomuser.me/api/portraits/men/18.jpg', rank: 5 },
-        { id: 6, name: 'Emma Brown', points: 2050, avatar: 'https://randomuser.me/api/portraits/women/33.jpg', rank: 6 },
-        { id: 7, name: 'Lucas Kim', points: 1920, avatar: 'https://randomuser.me/api/portraits/men/45.jpg', rank: 7 },
-        { id: 8, name: 'Olivia Schmidt', points: 1870, avatar: 'https://randomuser.me/api/portraits/women/28.jpg', rank: 8 },
-        { id: 9, name: 'Noah Davis', points: 1760, avatar: 'https://randomuser.me/api/portraits/men/62.jpg', rank: 9 },
-        { id: 10, name: 'Sophia Taylor', points: 1650, avatar: 'https://randomuser.me/api/portraits/women/12.jpg', rank: 10 },
+        { id: 1, name: 'Goku', points: 2850, avatar: 'https://i.pinimg.com/736x/e2/f0/6c/e2f06c9101dc22814be2a2352f7dc871.jpg', rank: 1 },
+        { id: 2, name: 'Luffy', points: 2720, avatar: 'https://i.pinimg.com/736x/0d/98/b2/0d98b2916254548f2c79a57eb8768969.jpg', rank: 2 },
+        { id: 3, name: 'Levi Ackerman', points: 2540, avatar: 'https://i.pinimg.com/736x/49/0c/9e/490c9ef127fca74c07c339a998e96286.jpg', rank: 3 },
+        { id: 4, name: 'Light Yagami', points: 2350, avatar: 'https://i.pinimg.com/736x/91/3a/7d/913a7d47adda9de9a441c7a6c554a211.jpg', rank: 4 },
+        { id: 5, name: 'Naruto Uzumaki', points: 2180, avatar: 'https://i.pinimg.com/736x/4a/28/78/4a2878cd36ba397be2163c55cfef0026.jpg', rank: 5 },
+        { id: 6, name: 'Itachi Uchiha', points: 2050, avatar: 'https://i.pinimg.com/736x/ad/d7/6f/add76f09ad6577fe5c76f7af54adf633.jpg', rank: 6 },
+        { id: 7, name: 'Edward Elric', points: 1920, avatar: 'https://i.pinimg.com/736x/dd/ee/f5/ddeef5dd4173a48e8f8d69272aa064ca.jpg', rank: 7 },
+        { id: 8, name: ' Gojo Satoru ', points: 1870, avatar: 'https://i.pinimg.com/736x/b9/66/8b/b9668b8233a769967e4ba7cdf0e0d3bf.jpg', rank: 8 },
+        { id: 9, name: ' Eren Yeager', points: 1760, avatar: 'https://randomuser.me/api/portraits/men/62.jpg', rank: 9 },
+        { id: 10, name: 'Zoro', points: 1650, avatar: 'https://i.pinimg.com/736x/40/15/36/4015368ab3afc5b1e352fe56b8d356b2.jpg', rank: 10 },
     ];
 
     // My profile data
-    const myProfile = { name: 'You', points: 2050, avatar: 'https://randomuser.me/api/portraits/lego/1.jpg', rank: 6 };
+    const myProfile = { name: 'You', points: 2050, avatar: 'https://pbs.twimg.com/profile_images/1900043039831449603/EzgPL3sp_400x400.jpg', rank: 34 };
 
     return (
         <SafeScreenView style={styles.container} backgroundColor={HomeColors.background}>
@@ -38,37 +38,45 @@ export default function Leaderboard() {
                 </LinearGradient>
             </View>
 
-            <View style={styles.tabs}>
-                <TouchableOpacity style={[styles.tab, styles.activeTab]}>
-                    <Text style={[styles.tabText, styles.activeTabText]}>Global</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.tab}>
-                    <Text style={styles.tabText}>Friends</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.tab}>
-                    <Text style={styles.tabText}>Challenges</Text>
-                </TouchableOpacity>
-            </View>
-
             <View style={styles.topThree}>
-                {leaderboardData.slice(0, 3).map((user, index) => (
-                    <View key={user.id} style={[
-                        styles.topUser, 
-                        index === 1 ? styles.topUserFirst : {},
-                        index === 0 ? styles.topUserSecond : {},
-                        index === 2 ? styles.topUserThird : {}
-                    ]}>
-                        <View style={styles.rankBadge}>
-                            <Text style={styles.rankText}>{user.rank}</Text>
-                        </View>
-                        <Image source={{ uri: user.avatar }} style={styles.avatar} />
-                        <Text style={styles.userName} numberOfLines={1}>{user.name}</Text>
-                        <View style={styles.pointsContainer}>
-                            <Ionicons name="star" size={14} color="#FFD700" />
-                            <Text style={styles.pointsText}>{user.points}</Text>
-                        </View>
+                {/* Third place - Left */}
+                <View style={[styles.topUser, styles.topUserThird]}>
+                    <View style={styles.rankBadge}>
+                        <Text style={styles.rankText}>3</Text>
                     </View>
-                ))}
+                    <Image source={{ uri: leaderboardData[2].avatar }} style={styles.avatar} />
+                    <Text style={styles.userName} numberOfLines={1}>{leaderboardData[2].name}</Text>
+                    <View style={styles.pointsContainer}>
+                        <Ionicons name="star" size={14} color="#FFD700" />
+                        <Text style={styles.pointsText}>{leaderboardData[2].points}</Text>
+                    </View>
+                </View>
+                
+                {/* First place - Middle */}
+                <View style={[styles.topUser, styles.topUserFirst]}>
+                    <View style={styles.rankBadge}>
+                        <Text style={styles.rankText}>1</Text>
+                    </View>
+                    <Image source={{ uri: leaderboardData[0].avatar }} style={[styles.avatar, styles.avatarFirst]} />
+                    <Text style={styles.userName} numberOfLines={1}>{leaderboardData[0].name}</Text>
+                    <View style={styles.pointsContainer}>
+                        <Ionicons name="star" size={14} color="#FFD700" />
+                        <Text style={styles.pointsText}>{leaderboardData[0].points}</Text>
+                    </View>
+                </View>
+                
+                {/* Second place - Right */}
+                <View style={[styles.topUser, styles.topUserSecond]}>
+                    <View style={styles.rankBadge}>
+                        <Text style={styles.rankText}>2</Text>
+                    </View>
+                    <Image source={{ uri: leaderboardData[1].avatar }} style={styles.avatar} />
+                    <Text style={styles.userName} numberOfLines={1}>{leaderboardData[1].name}</Text>
+                    <View style={styles.pointsContainer}>
+                        <Ionicons name="star" size={14} color="#FFD700" />
+                        <Text style={styles.pointsText}>{leaderboardData[1].points}</Text>
+                    </View>
+                </View>
             </View>
 
             <ScrollView style={styles.rankingsList}>
@@ -126,34 +134,12 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: 'rgba(255, 255, 255, 0.7)',
     },
-    tabs: {
-        flexDirection: 'row',
-        backgroundColor: HomeColors.challengeCard,
-        marginTop: 20,
-        paddingVertical: 10,
-    },
-    tab: {
-        flex: 1,
-        alignItems: 'center',
-        paddingVertical: 8,
-    },
-    activeTab: {
-        borderBottomWidth: 2,
-        borderBottomColor: OnboardingColors.accentColor,
-    },
-    tabText: {
-        fontWeight: '500',
-        color: HomeColors.textSecondary,
-    },
-    activeTabText: {
-        color: OnboardingColors.accentColor,
-    },
     topThree: {
         flexDirection: 'row',
         justifyContent: 'center',
         alignItems: 'flex-end',
         backgroundColor: HomeColors.challengeCard,
-        paddingBottom: 20,
+        paddingVertical: 30,
         paddingHorizontal: 15,
         marginBottom: 10,
     },
@@ -163,7 +149,7 @@ const styles = StyleSheet.create({
         position: 'relative',
     },
     topUserFirst: {
-        transform: [{translateY: -15}],
+        transform: [{translateY: -25}],
         zIndex: 3,
     },
     topUserSecond: {
@@ -197,6 +183,13 @@ const styles = StyleSheet.create({
         borderRadius: 35,
         borderWidth: 3,
         borderColor: HomeColors.background,
+    },
+    avatarFirst: {
+        width: 85,
+        height: 85,
+        borderRadius: 42.5,
+        borderWidth: 4,
+        borderColor: '#FFD700',
     },
     userName: {
         fontWeight: 'bold',

@@ -9,40 +9,20 @@ export default function Profile() {
         <SafeScreenView style={styles.container} backgroundColor={HomeColors.background}>
             <StatusBar barStyle="light-content" />
             
-            <View style={styles.selectedHeaderContainer}>
-                <LinearGradient
-                    colors={['rgba(23, 23, 23, 0.9)', 'rgba(10, 10, 10, 0.95)']}
-                    style={styles.headerGradient}
-                >
-                    <View style={styles.selectedHeaderContent}>
-                        <Text style={styles.selectedHeaderTitle}>Profile</Text>
-                        <Text style={styles.selectedHeaderDetails}>Your account information</Text>
-                    </View>
-                </LinearGradient>
-            </View>
 
             <View style={styles.profileHeader}>
                 <Image 
-                    source={{ uri: 'https://randomuser.me/api/portraits/lego/1.jpg' }} 
+                    source={{ uri: 'https://pbs.twimg.com/profile_images/1900043039831449603/EzgPL3sp_400x400.jpg' }} 
                     style={styles.profileImage} 
                 />
-                <Text style={styles.profileName}>John Doe</Text>
-                <Text style={styles.profileBio}>Fitness enthusiast, software developer, and accountability champion</Text>
+                <Text style={styles.profileName}>Siddharth </Text>
+                <Text style={styles.profileBio}>20, engineer.
+                </Text>
                 
                 <View style={styles.statsContainer}>
                     <View style={styles.statItem}>
                         <Text style={styles.statValue}>42</Text>
                         <Text style={styles.statLabel}>Challenges</Text>
-                    </View>
-                    <View style={styles.divider} />
-                    <View style={styles.statItem}>
-                        <Text style={styles.statValue}>289</Text>
-                        <Text style={styles.statLabel}>Following</Text>
-                    </View>
-                    <View style={styles.divider} />
-                    <View style={styles.statItem}>
-                        <Text style={styles.statValue}>156</Text>
-                        <Text style={styles.statLabel}>Followers</Text>
                     </View>
                 </View>
                 
@@ -51,42 +31,6 @@ export default function Profile() {
                 </TouchableOpacity>
             </View>
             
-            <View style={styles.sectionContainer}>
-                <Text style={styles.sectionTitle}>Achievements</Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.achievementsContainer}>
-                    <View style={styles.achievementCard}>
-                        <View style={styles.achievementIcon}>
-                            <Ionicons name="trophy" size={24} color="#FFD700" />
-                        </View>
-                        <Text style={styles.achievementTitle}>Fitness Pro</Text>
-                        <Text style={styles.achievementDescription}>Completed 10 fitness challenges</Text>
-                    </View>
-                    
-                    <View style={styles.achievementCard}>
-                        <View style={[styles.achievementIcon, { backgroundColor: OnboardingColors.accentSecondary }]}>
-                            <Ionicons name="flame" size={24} color="#FFF" />
-                        </View>
-                        <Text style={styles.achievementTitle}>30-Day Streak</Text>
-                        <Text style={styles.achievementDescription}>Maintained a 30-day activity streak</Text>
-                    </View>
-                    
-                    <View style={styles.achievementCard}>
-                        <View style={[styles.achievementIcon, { backgroundColor: '#2196F3' }]}>
-                            <Ionicons name="people" size={24} color="#FFF" />
-                        </View>
-                        <Text style={styles.achievementTitle}>Team Leader</Text>
-                        <Text style={styles.achievementDescription}>Led a team of 5+ people in challenges</Text>
-                    </View>
-                    
-                    <View style={styles.achievementCard}>
-                        <View style={[styles.achievementIcon, { backgroundColor: '#9C27B0' }]}>
-                            <Ionicons name="ribbon" size={24} color="#FFF" />
-                        </View>
-                        <Text style={styles.achievementTitle}>Early Adopter</Text>
-                        <Text style={styles.achievementDescription}>Joined during the first month</Text>
-                    </View>
-                </ScrollView>
-            </View>
             
             <View style={styles.sectionContainer}>
                 <Text style={styles.sectionTitle}>Activity History</Text>
@@ -246,8 +190,7 @@ const styles = StyleSheet.create({
     },
     statsContainer: {
         flexDirection: 'row',
-        width: '100%',
-        justifyContent: 'space-around',
+        justifyContent: 'center',
         marginTop: 20,
         marginBottom: 20,
     },
@@ -255,19 +198,14 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     statValue: {
-        fontSize: 18,
+        fontSize: 24,
         fontWeight: 'bold',
         color: HomeColors.text,
     },
     statLabel: {
-        fontSize: 12,
+        fontSize: 14,
         color: HomeColors.textSecondary,
         marginTop: 4,
-    },
-    divider: {
-        width: 1,
-        height: '100%',
-        backgroundColor: 'rgba(255, 255, 255, 0.1)',
     },
     editButton: {
         borderWidth: 1,
