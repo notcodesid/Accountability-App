@@ -6,7 +6,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 export default function Profile() {
     return (
-        <SafeScreenView style={styles.container} backgroundColor={HomeColors.background}>
+        <SafeScreenView style={styles.container} backgroundColor={HomeColors.background} scrollable={false}>
             <StatusBar barStyle="light-content" />
             
 

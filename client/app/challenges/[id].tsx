@@ -209,6 +209,8 @@ export default function ChallengeDetailsScreen() {
                     <LinearGradient
                         colors={['rgba(0,0,0,0.1)', 'rgba(0,0,0,0.8)']}
                         style={styles.imageGradient}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 0, y: 1 }}
                     >
                         <View style={styles.badgeContainer}>
                             <View style={[

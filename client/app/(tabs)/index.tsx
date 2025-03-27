@@ -104,6 +104,8 @@ export default function Home() {
         <LinearGradient
           colors={['rgba(0,0,0,0.1)', 'rgba(0,0,0,0.8)']}
           style={styles.gradient}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0, y: 1 }}
         >
           <View style={styles.challengeHeader}>
             <Text style={styles.challengeTitle}>{item.title}</Text>
@@ -148,6 +150,8 @@ export default function Home() {
         <LinearGradient
           colors={['rgba(23, 23, 23, 0.9)', 'rgba(10, 10, 10, 0.95)']}
           style={styles.headerGradient}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0, y: 1 }}
         >
           <View style={styles.selectedHeaderContent}>
             {selectedChallengeData ? (

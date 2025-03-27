@@ -45,13 +45,15 @@ export default function Leaderboard() {
     );
 
     return (
-        <SafeScreenView style={styles.container} backgroundColor={HomeColors.background}>
+        <SafeScreenView style={styles.container} backgroundColor={HomeColors.background} scrollable={false}>
             <StatusBar barStyle="light-content" />
             
             <View style={styles.selectedHeaderContainer}>
                 <LinearGradient
                     colors={['rgba(23, 23, 23, 0.9)', 'rgba(10, 10, 10, 0.95)']}
                     style={styles.headerGradient}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 0, y: 1 }}
                 >
                     <View style={styles.selectedHeaderContent}>
                         <Text style={styles.selectedHeaderTitle}>Leaderboard</Text>
