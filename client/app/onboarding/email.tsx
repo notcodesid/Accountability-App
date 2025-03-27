@@ -49,7 +49,7 @@ export default function EmailScreen() {
     if (email.trim() === '') return;
     
     router.push({
-      pathname: '/onboarding/password',
+      pathname: '/onboarding/otp',
       params: { email: email, isSignIn: isSignIn ? 'true' : 'false' }
     });
   };
