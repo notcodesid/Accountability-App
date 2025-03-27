@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, FlatList, StatusBar } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, FlatList, StatusBar, ImageBackground } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, HomeColors, OnboardingColors } from '../../constants/Colors';
 import { router } from 'expo-router';
@@ -16,10 +16,14 @@ interface Challenge {
     participants: number;
     contribution: string;
     prizePool: string;
+    status?: 'active' | 'completed';
+    joined?: boolean;
+    image?: string;
+    metrics?: string;
 }
 
 // Sample data for challenges
-const CHALLENGES: Challenge[] = [
+const ALL_CHALLENGES: Challenge[] = [
     {
         id: '1',
         title: '10K Steps Daily',
@@ -29,6 +33,10 @@ const CHALLENGES: Challenge[] = [
         participants: 156,
         contribution: '$50',
         prizePool: '$7,800',
+        status: 'active',
+        joined: true,
+        image: 'https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?auto=format&fit=crop&w=1000',
+        metrics: '10,000 steps daily'
     },
     {
         id: '2',
@@ -39,6 +47,10 @@ const CHALLENGES: Challenge[] = [
         participants: 89,
         contribution: '$75',
         prizePool: '$6,675',
+        status: 'active',
+        joined: true,
+        image: 'https://images.unsplash.com/photo-1571008887538-b36bb32f4571?auto=format&fit=crop&w=1000',
+        metrics: '5 km • 3x week'
     },
     {
         id: '3',
@@ -49,40 +61,195 @@ const CHALLENGES: Challenge[] = [
         participants: 124,
         contribution: '$25',
         prizePool: '$3,100',
+        status: 'active',
+        joined: true,
+        image: 'https://images.unsplash.com/photo-1470299067034-07c696e9ef07?auto=format&fit=crop&w=1000',
+        metrics: '60 min • daily'
     },
+    {
+        id: '4',
+        title: 'Morning Meditation',
+        type: 'Wellness',
+        duration: '60 days',
+        progress: 1.0,
+        participants: 208,
+        contribution: '$30',
+        prizePool: '$6,240',
+        status: 'completed',
+        joined: true,
+        image: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&w=1000',
+        metrics: '10 min • morning'
+    },
+    {
+        id: '5',
+        title: 'Water Intake Challenge',
+        type: 'Health',
+        duration: '14 days',
+        progress: 1.0,
+        participants: 143,
+        contribution: '$20',
+        prizePool: '$2,860',
+        status: 'completed',
+        joined: true,
+        image: 'https://images.unsplash.com/photo-1523362628745-0c100150b504?auto=format&fit=crop&w=1000',
+        metrics: '2L water • daily'
+    },
+    {
+        id: '6',
+        title: 'Book Reading Marathon',
+        type: 'Education',
+        duration: '30 days',
+        progress: 1.0,
+        participants: 95,
+        contribution: '$40',
+        prizePool: '$3,800',
+        status: 'completed',
+        joined: true,
+        image: 'https://images.unsplash.com/photo-1519682337058-a94d519337bc?auto=format&fit=crop&w=1000',
+        metrics: '30 min • daily'
+    },
+    {
+        id: '7',
+        title: 'Plank Challenge',
+        type: 'Fitness',
+        duration: '30 days',
+        progress: 0.15,
+        participants: 67,
+        contribution: '$35',
+        prizePool: '$2,345',
+        status: 'active',
+        joined: false,
+        image: 'https://images.unsplash.com/photo-1574680178050-55c6a6a96e0a?auto=format&fit=crop&w=1000',
+        metrics: 'increasing daily'
+    },
+    {
+        id: '8',
+        title: 'Healthy Meal Prep',
+        type: 'Nutrition',
+        duration: '21 days',
+        progress: 0,
+        participants: 112,
+        contribution: '$30',
+        prizePool: '$3,360',
+        status: 'active',
+        joined: false,
+        image: 'https://images.unsplash.com/photo-1543362906-acfc16c67564?auto=format&fit=crop&w=1000',
+        metrics: '1 meal • daily'
+    },
+    {
+        id: '9',
+        title: 'Sleep Tracking',
+        type: 'Wellness',
+        duration: '14 days',
+        progress: 0,
+        participants: 85,
+        contribution: '$25',
+        prizePool: '$2,125',
+        status: 'active',
+        joined: false,
+        image: 'https://images.unsplash.com/photo-1511493485273-992e6069a8d7?auto=format&fit=crop&w=1000',
+        metrics: '7+ hours • nightly'
+    }
 ];
 
 export default function ChallengesScreen() {
-    const [activeTab, setActiveTab] = useState('active');
+    const [activeTab, setActiveTab] = useState('all');
+    
+    // Filter challenges based on active tab
+    const filteredChallenges = () => {
+        switch(activeTab) {
+            case 'active':
+                return ALL_CHALLENGES.filter(challenge => challenge.status === 'active' && challenge.joined);
+            case 'completed':
+                return ALL_CHALLENGES.filter(challenge => challenge.status === 'completed');
+            default:
+                // For 'all' tab, show active challenges that the user hasn't joined yet
+                return ALL_CHALLENGES.filter(challenge => challenge.status === 'active' && !challenge.joined);
+        }
+    };
+
+    // Get dynamic header text based on selected tab
+    const getHeaderText = () => {
+        switch(activeTab) {
+            case 'active':
+                return { title: 'My Challenges', subtitle: 'Track your ongoing challenges' };
+            case 'completed':
+                return { title: 'Completed Challenges', subtitle: 'View your past victories' };
+            default:
+                return { title: 'Discover Challenges', subtitle: 'Find new challenges to join' };
+        }
+    };
 
     const renderChallengeItem = ({ item }: { item: Challenge }) => (
-        <TouchableOpacity style={styles.challengeCard} onPress={() => router.push(`/challenges/${item.id}` as any)}>
-            <View style={styles.challengeHeader}>
-                <View style={styles.challengeBadge}>
-                    <Ionicons name={item.type === 'Running' ? 'walk' : (item.type === 'Steps' ? 'footsteps' : 'fitness')} size={20} color="#fff" />
-                </View>
-                <View style={styles.challengeInfo}>
-                    <Text style={styles.challengeTitle}>{item.title}</Text>
-                    <Text style={styles.challengeMeta}>{item.type} • {item.duration}</Text>
-                </View>
-            </View>
+        <TouchableOpacity 
+            style={styles.challengeCard} 
+            onPress={() => router.push(`/challenges/${item.id}` as any)}
+        >
+            <ImageBackground 
+                source={{ uri: item.image }} 
+                style={styles.challengeImage}
+                imageStyle={styles.imageStyle}
+            >
+                <LinearGradient
+                    colors={['rgba(0,0,0,0.1)', 'rgba(0,0,0,0.8)']}
+                    style={styles.gradient}
+                >
+                    <View style={styles.challengeHeader}>
+                        <Text style={styles.challengeTitle}>{item.title}</Text>
+                        {item.metrics && (
+                            <Text style={styles.metricsText}>{item.metrics}</Text>
+                        )}
+                    </View>
+                </LinearGradient>
+                
+                {item.status === 'completed' && (
+                    <View style={styles.statusBadge}>
+                        <Ionicons name="checkmark-circle" size={16} color="#fff" />
+                        <Text style={styles.statusText}>Completed</Text>
+                    </View>
+                )}
+            </ImageBackground>
             
-            <View style={styles.progressContainer}>
-                <View style={[styles.progressBar, { width: `${item.progress * 100}%` }]} />
-            </View>
-            
-            <View style={styles.challengeStats}>
-                <View style={styles.statItem}>
-                    <Text style={styles.statValue}>{item.participants}</Text>
-                    <Text style={styles.statLabel}>Participants</Text>
+            <View style={styles.challengeDetails}>
+                <View style={styles.detailRow}>
+                    <View style={styles.detailItem}>
+                        <Ionicons name="calendar" size={14} color={HomeColors.text} />
+                        <Text style={styles.detailText}>{item.duration}</Text>
+                    </View>
+                    <View style={styles.detailItem}>
+                        <Ionicons name="people" size={14} color={HomeColors.text} />
+                        <Text style={styles.detailText}>{item.participants} participants</Text>
+                    </View>
                 </View>
-                <View style={styles.statItem}>
-                    <Text style={styles.statValue}>{item.contribution}</Text>
-                    <Text style={styles.statLabel}>Your Stake</Text>
-                </View>
-                <View style={styles.statItem}>
-                    <Text style={styles.statValue}>{item.prizePool}</Text>
-                    <Text style={styles.statLabel}>Prize Pool</Text>
+                
+                {/* Show progress only for joined challenges */}
+                {item.joined && (
+                    <View style={styles.progressSection}>
+                        <View style={styles.progressLabel}>
+                            <Text style={styles.progressText}>Progress</Text>
+                            <Text style={styles.progressPercentage}>{Math.round(item.progress * 100)}%</Text>
+                        </View>
+                        <View style={styles.progressContainer}>
+                            <View 
+                                style={[
+                                    styles.progressBar, 
+                                    { width: `${item.progress * 100}%` },
+                                    item.status === 'completed' ? styles.completedProgressBar : {}
+                                ]} 
+                            />
+                        </View>
+                    </View>
+                )}
+                
+                <View style={styles.detailRow}>
+                    <View style={styles.detailItem}>
+                        <Ionicons name="wallet" size={14} color={HomeColors.text} />
+                        <Text style={styles.detailText}>Contribution: {item.contribution}</Text>
+                    </View>
+                    <View style={styles.detailItem}>
+                        <Ionicons name="trophy" size={14} color={HomeColors.text} />
+                        <Text style={styles.detailText}>Prize: {item.prizePool}</Text>
+                    </View>
                 </View>
             </View>
         </TouchableOpacity>
@@ -98,13 +265,19 @@ export default function ChallengesScreen() {
                     style={styles.headerGradient}
                 >
                     <View style={styles.selectedHeaderContent}>
-                        <Text style={styles.selectedHeaderTitle}>My Challenges</Text>
-                        <Text style={styles.selectedHeaderDetails}>Track your progress and earnings</Text>
+                        <Text style={styles.selectedHeaderTitle}>{getHeaderText().title}</Text>
+                        <Text style={styles.selectedHeaderDetails}>{getHeaderText().subtitle}</Text>
                     </View>
                 </LinearGradient>
             </View>
             
             <View style={styles.tabs}>
+                <TouchableOpacity 
+                    style={[styles.tab, activeTab === 'all' && styles.activeTab]} 
+                    onPress={() => setActiveTab('all')}
+                >
+                    <Text style={[styles.tabText, activeTab === 'all' && styles.activeTabText]}>Discover</Text>
+                </TouchableOpacity>
                 <TouchableOpacity 
                     style={[styles.tab, activeTab === 'active' && styles.activeTab]} 
                     onPress={() => setActiveTab('active')}
@@ -117,28 +290,20 @@ export default function ChallengesScreen() {
                 >
                     <Text style={[styles.tabText, activeTab === 'completed' && styles.activeTabText]}>Completed</Text>
                 </TouchableOpacity>
-                <TouchableOpacity 
-                    style={[styles.tab, activeTab === 'created' && styles.activeTab]} 
-                    onPress={() => setActiveTab('created')}
-                >
-                    <Text style={[styles.tabText, activeTab === 'created' && styles.activeTabText]}>Created</Text>
-                </TouchableOpacity>
             </View>
             
             <FlatList
-                data={CHALLENGES}
+                data={filteredChallenges()}
                 renderItem={renderChallengeItem}
                 keyExtractor={item => item.id}
                 contentContainerStyle={styles.challengesList}
+                ListEmptyComponent={
+                    <View style={styles.emptyContainer}>
+                        <Ionicons name="alert-circle-outline" size={48} color={HomeColors.textSecondary} />
+                        <Text style={styles.emptyText}>No challenges found</Text>
+                    </View>
+                }
             />
-            
-            <TouchableOpacity 
-                style={styles.createButton} 
-                onPress={() => router.push('/create-challenge' as any)}
-            >
-                <Ionicons name="add-circle" size={20} color="#fff" />
-                <Text style={styles.createButtonText}>Create Challenge</Text>
-            </TouchableOpacity>
         </SafeScreenView>
     );
 }
@@ -194,91 +359,124 @@ const styles = StyleSheet.create({
     },
     challengesList: {
         paddingHorizontal: 15,
+        paddingBottom: 20,
     },
     challengeCard: {
         backgroundColor: HomeColors.challengeCard,
         borderRadius: 16,
-        padding: 15,
+        overflow: 'hidden',
         marginBottom: 15,
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
+        shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.1,
-        shadowRadius: 2,
-        elevation: 2,
+        shadowRadius: 8,
+        elevation: 5,
+    },
+    challengeImage: {
+        height: 180,
+        width: '100%',
+    },
+    imageStyle: {
+        borderTopLeftRadius: 16,
+        borderTopRightRadius: 16,
+    },
+    gradient: {
+        height: '100%',
+        width: '100%',
+        justifyContent: 'flex-end',
+        padding: 16,
     },
     challengeHeader: {
         flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 15,
-    },
-    challengeBadge: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        backgroundColor: OnboardingColors.accentColor,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    challengeInfo: {
-        flex: 1,
-        marginLeft: 12,
+        alignItems: 'flex-end',
+        justifyContent: 'space-between',
+        marginBottom: 0,
     },
     challengeTitle: {
-        fontSize: 16,
+        fontSize: 22,
+        fontWeight: 'bold',
+        color: '#fff',
+        flex: 1,
+    },
+    metricsText: {
+        fontSize: 14,
+        color: '#fff',
+    },
+    challengeDetails: {
+        padding: 16,
+    },
+    detailRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginBottom: 12,
+    },
+    detailItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    detailText: {
+        fontSize: 12,
+        color: HomeColors.textSecondary,
+        marginLeft: 5,
+    },
+    progressSection: {
+        marginVertical: 12,
+    },
+    progressLabel: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 5,
+    },
+    progressText: {
+        fontSize: 12,
         fontWeight: '600',
         color: HomeColors.text,
     },
-    challengeMeta: {
+    progressPercentage: {
         fontSize: 12,
-        color: HomeColors.textSecondary,
-        marginTop: 2,
+        fontWeight: 'bold',
+        color: OnboardingColors.accentColor,
     },
     progressContainer: {
         height: 6,
         backgroundColor: '#333333',
         borderRadius: 3,
-        marginBottom: 15,
     },
     progressBar: {
         height: '100%',
         backgroundColor: OnboardingColors.accentColor,
         borderRadius: 3,
     },
-    challengeStats: {
+    completedProgressBar: {
+        backgroundColor: '#4CAF50',
+    },
+    statusBadge: {
+        position: 'absolute',
+        top: 15,
+        right: 15,
+        backgroundColor: '#4CAF50',
         flexDirection: 'row',
-        justifyContent: 'space-between',
-    },
-    statItem: {
         alignItems: 'center',
-        flex: 1,
+        paddingVertical: 4,
+        paddingHorizontal: 8,
+        borderRadius: 12,
+        zIndex: 1,
     },
-    statValue: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        color: HomeColors.text,
-    },
-    statLabel: {
-        fontSize: 12,
-        color: HomeColors.textSecondary,
-        marginTop: 2,
-    },
-    createButton: {
-        flexDirection: 'row',
-        backgroundColor: OnboardingColors.accentColor,
-        borderRadius: 30,
-        padding: 15,
-        justifyContent: 'center',
-        alignItems: 'center',
-        margin: 15,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.2,
-        shadowRadius: 3,
-        elevation: 3,
-    },
-    createButtonText: {
+    statusText: {
         color: '#fff',
+        fontSize: 12,
         fontWeight: 'bold',
-        marginLeft: 8,
+        marginLeft: 4,
+    },
+    emptyContainer: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 50,
+    },
+    emptyText: {
+        fontSize: 16,
+        color: HomeColors.textSecondary,
+        marginTop: 10,
     },
 });
