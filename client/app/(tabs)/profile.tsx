@@ -1,14 +1,44 @@
+import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Image, StatusBar, Alert } from "react-native";
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, HomeColors, OnboardingColors } from '../../constants/Colors';
 import SafeScreenView from '../../components/SafeScreenView';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../../context/AuthContext';
-import { useState } from 'react';
+import { getUserActiveChallenges, getTransactionHistory, UserChallenge, Transaction } from '../../services/api';
+import { router } from 'expo-router';
 
 export default function Profile() {
     const { user, logout } = useAuth();
     const [isLoggingOut, setIsLoggingOut] = useState(false);
+    const [activeChallenges, setActiveChallenges] = useState<UserChallenge[]>([]);
+    const [transactions, setTransactions] = useState<Transaction[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        fetchUserData();
+    }, []);
+
+    const fetchUserData = async () => {
+        setLoading(true);
+        try {
+            // Fetch active challenges
+            const challengesResponse = await getUserActiveChallenges();
+            if (challengesResponse.success) {
+                setActiveChallenges(challengesResponse.data);
+            }
+
+            // Fetch transaction history
+            const transactionsResponse = await getTransactionHistory();
+            if (transactionsResponse.success) {
+                setTransactions(transactionsResponse.data);
+            }
+        } catch (error) {
+            console.error('Error fetching user data:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handleLogout = async () => {
         Alert.alert(
@@ -38,23 +68,21 @@ export default function Profile() {
     };
 
     return (
-        <SafeScreenView style={styles.container} backgroundColor={HomeColors.background} scrollable={false}>
+        <SafeScreenView style={styles.container} backgroundColor={HomeColors.background} scrollable={true}>
             <StatusBar barStyle="light-content" />
             
-
             <View style={styles.profileHeader}>
                 <Image 
                     source={{ uri: 'https://pbs.twimg.com/profile_images/1900043039831449603/EzgPL3sp_400x400.jpg' }} 
                     style={styles.profileImage} 
                 />
                 <Text style={styles.profileName}>{user?.username || "User"}</Text>
-                <Text style={styles.profileBio}>{user?.email || ""}
-                </Text>
+                <Text style={styles.profileBio}>{user?.email || ""}</Text>
                 
                 <View style={styles.statsContainer}>
                     <View style={styles.statItem}>
-                        <Text style={styles.statValue}>42</Text>
-                        <Text style={styles.statLabel}>Challenges</Text>
+                        <Text style={styles.statValue}>{activeChallenges.length}</Text>
+                        <Text style={styles.statLabel}>Active Challenges</Text>
                     </View>
                 </View>
                 
@@ -63,69 +91,111 @@ export default function Profile() {
                 </TouchableOpacity>
             </View>
             
+            <View style={styles.sectionContainer}>
+                <Text style={styles.sectionTitle}>Active Challenges</Text>
+                
+                {loading ? (
+                    <Text style={styles.loadingText}>Loading challenges...</Text>
+                ) : activeChallenges.length === 0 ? (
+                    <View style={styles.emptyChallenges}>
+                        <Ionicons name="flag-outline" size={40} color={HomeColors.textSecondary} />
+                        <Text style={styles.emptyText}>No active challenges yet</Text>
+                        <TouchableOpacity 
+                            style={styles.findChallengeButton}
+                            onPress={() => router.push('/challenges')}
+                        >
+                            <Text style={styles.findChallengeText}>Find Challenges</Text>
+                        </TouchableOpacity>
+                    </View>
+                ) : (
+                    <>
+                        {activeChallenges.map((item, index) => (
+                            <TouchableOpacity 
+                                key={item.id} 
+                                style={styles.challengeItem}
+                                onPress={() => router.push(`/challenges/${item.challengeId}`)}
+                            >
+                                <View style={styles.challengeImageContainer}>
+                                    <Image 
+                                        source={{ uri: item.challenge.image }} 
+                                        style={styles.challengeImage}
+                                    />
+                                </View>
+                                <View style={styles.challengeContent}>
+                                    <Text style={styles.challengeTitle}>
+                                        {item.challenge.title}
+                                    </Text>
+                                    <Text style={styles.challengeType}>
+                                        {item.challenge.type} • {item.challenge.difficulty}
+                                    </Text>
+                                    <View style={styles.progressContainer}>
+                                        <View 
+                                            style={[
+                                                styles.progressBar, 
+                                                { width: `${item.progress * 100}%` }
+                                            ]}
+                                        />
+                                    </View>
+                                    <Text style={styles.progressText}>
+                                        {Math.round(item.progress * 100)}% complete
+                                    </Text>
+                                </View>
+                            </TouchableOpacity>
+                        ))}
+                    </>
+                )}
+            </View>
             
             <View style={styles.sectionContainer}>
-                <Text style={styles.sectionTitle}>Activity History</Text>
+                <Text style={styles.sectionTitle}>Recent Transactions</Text>
                 
-                <View style={styles.activityItem}>
-                    <View style={styles.activityLeft}>
-                        <View style={[styles.activityDot, { backgroundColor: OnboardingColors.accentColor }]} />
-                        <View style={styles.activityLine} />
+                {loading ? (
+                    <Text style={styles.loadingText}>Loading transactions...</Text>
+                ) : transactions.length === 0 ? (
+                    <View style={styles.emptyTransactions}>
+                        <Ionicons name="wallet-outline" size={40} color={HomeColors.textSecondary} />
+                        <Text style={styles.emptyText}>No transactions yet</Text>
                     </View>
-                    <View style={styles.activityContent}>
-                        <Text style={styles.activityTitle}>Completed Morning Workout</Text>
-                        <Text style={styles.activityTimestamp}>Today, 8:30 AM</Text>
-                        <View style={styles.activityCard}>
-                            <Text style={styles.activityDetail}>30 minutes of cardio + strength training</Text>
-                        </View>
-                    </View>
-                </View>
-                
-                <View style={styles.activityItem}>
-                    <View style={styles.activityLeft}>
-                        <View style={[styles.activityDot, { backgroundColor: OnboardingColors.accentSecondary }]} />
-                        <View style={styles.activityLine} />
-                    </View>
-                    <View style={styles.activityContent}>
-                        <Text style={styles.activityTitle}>Joined "Reading Challenge"</Text>
-                        <Text style={styles.activityTimestamp}>Yesterday, 2:15 PM</Text>
-                        <View style={styles.activityCard}>
-                            <Text style={styles.activityDetail}>21-day challenge to read 30 minutes daily</Text>
-                        </View>
-                    </View>
-                </View>
-                
-                <View style={styles.activityItem}>
-                    <View style={styles.activityLeft}>
-                        <View style={[styles.activityDot, { backgroundColor: '#FF9800' }]} />
-                        <View style={styles.activityLine} />
-                    </View>
-                    <View style={styles.activityContent}>
-                        <Text style={styles.activityTitle}>Earned "Fitness Pro" Badge</Text>
-                        <Text style={styles.activityTimestamp}>Mar 22, 11:45 AM</Text>
-                        <View style={styles.activityCard}>
-                            <Text style={styles.activityDetail}>Completed 10 fitness challenges</Text>
-                        </View>
-                    </View>
-                </View>
-                
-                <View style={styles.activityItem}>
-                    <View style={styles.activityLeft}>
-                        <View style={[styles.activityDot, { backgroundColor: '#9C27B0' }]} />
-                        <View style={styles.activityLine} />
-                    </View>
-                    <View style={styles.activityContent}>
-                        <Text style={styles.activityTitle}>Completed "30-Day Water Challenge"</Text>
-                        <Text style={styles.activityTimestamp}>Mar 18, 9:20 PM</Text>
-                        <View style={styles.activityCard}>
-                            <Text style={styles.activityDetail}>Successfully drank 2L of water daily for 30 days</Text>
-                        </View>
-                    </View>
-                </View>
-                
-                <TouchableOpacity style={styles.viewMoreButton}>
-                    <Text style={styles.viewMoreText}>View More</Text>
-                </TouchableOpacity>
+                ) : (
+                    <>
+                        {transactions.slice(0, 3).map((transaction) => (
+                            <View key={transaction.id} style={styles.transactionItem}>
+                                <View style={styles.transactionLeft}>
+                                    <View style={[
+                                        styles.transactionIcon, 
+                                        { backgroundColor: transaction.amount > 0 ? '#4CAF50' : OnboardingColors.accentColor }
+                                    ]}>
+                                        <Ionicons 
+                                            name={transaction.amount > 0 ? "arrow-down" : "arrow-up"} 
+                                            size={16} 
+                                            color="#fff" 
+                                        />
+                                    </View>
+                                </View>
+                                <View style={styles.transactionContent}>
+                                    <Text style={styles.transactionTitle}>{transaction.description}</Text>
+                                    <Text style={styles.transactionTimestamp}>
+                                        {new Date(transaction.createdAt).toLocaleDateString()}
+                                    </Text>
+                                </View>
+                                <Text 
+                                    style={[
+                                        styles.transactionAmount, 
+                                        transaction.amount > 0 ? styles.positiveAmount : styles.negativeAmount
+                                    ]}
+                                >
+                                    {transaction.amount > 0 ? '+' : ''}{transaction.amount} ACC
+                                </Text>
+                            </View>
+                        ))}
+                        
+                        {transactions.length > 3 && (
+                            <TouchableOpacity style={styles.viewMoreButton}>
+                                <Text style={styles.viewMoreText}>View All Transactions</Text>
+                            </TouchableOpacity>
+                        )}
+                    </>
+                )}
             </View>
             
             <View style={styles.sectionContainer}>
@@ -373,5 +443,124 @@ const styles = StyleSheet.create({
         fontWeight: '500',
         marginLeft: 8,
         fontSize: 16,
-    }
+    },
+    loadingText: {
+        color: HomeColors.textSecondary,
+        textAlign: 'center',
+        padding: 20,
+    },
+    emptyChallenges: {
+        alignItems: 'center',
+        padding: 30,
+        backgroundColor: HomeColors.challengeCard,
+        borderRadius: 10,
+    },
+    emptyTransactions: {
+        alignItems: 'center',
+        padding: 30,
+        backgroundColor: HomeColors.challengeCard,
+        borderRadius: 10,
+    },
+    emptyText: {
+        color: HomeColors.textSecondary,
+        marginTop: 10,
+        marginBottom: 15,
+    },
+    findChallengeButton: {
+        backgroundColor: OnboardingColors.accentColor,
+        paddingVertical: 8,
+        paddingHorizontal: 16,
+        borderRadius: 20,
+    },
+    findChallengeText: {
+        color: '#fff',
+        fontWeight: '500',
+    },
+    challengeItem: {
+        flexDirection: 'row',
+        backgroundColor: HomeColors.challengeCard,
+        borderRadius: 10,
+        marginBottom: 10,
+        overflow: 'hidden',
+    },
+    challengeImageContainer: {
+        width: 80,
+        height: 80,
+    },
+    challengeImage: {
+        width: '100%',
+        height: '100%',
+    },
+    challengeContent: {
+        flex: 1,
+        padding: 10,
+    },
+    challengeTitle: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: HomeColors.text,
+        marginBottom: 4,
+    },
+    challengeType: {
+        fontSize: 12,
+        color: HomeColors.textSecondary,
+        marginBottom: 8,
+    },
+    progressContainer: {
+        height: 4,
+        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+        borderRadius: 2,
+        marginBottom: 6,
+    },
+    progressBar: {
+        height: 4,
+        backgroundColor: OnboardingColors.accentColor,
+        borderRadius: 2,
+    },
+    progressText: {
+        fontSize: 12,
+        color: HomeColors.textSecondary,
+    },
+    transactionItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: HomeColors.challengeCard,
+        borderRadius: 10,
+        marginBottom: 10,
+        padding: 15,
+    },
+    transactionLeft: {
+        marginRight: 15,
+    },
+    transactionIcon: {
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        backgroundColor: OnboardingColors.accentColor,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    transactionContent: {
+        flex: 1,
+    },
+    transactionTitle: {
+        fontSize: 14,
+        fontWeight: '500',
+        color: HomeColors.text,
+        marginBottom: 4,
+    },
+    transactionTimestamp: {
+        fontSize: 12,
+        color: HomeColors.textSecondary,
+    },
+    transactionAmount: {
+        fontSize: 16,
+        fontWeight: 'bold',
+    },
+    positiveAmount: {
+        color: '#4CAF50',
+    },
+    negativeAmount: {
+        color: OnboardingColors.accentColor,
+    },
 });

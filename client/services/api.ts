@@ -210,4 +210,63 @@ export const getWalletBalance = (): Promise<WalletResponse> => {
   return fetchFromAPI<WalletResponse>('/wallet');
 };
 
+// Transaction interfaces
+export interface Transaction {
+  id: string;
+  userId: string;
+  amount: number;
+  type: 'CHALLENGE_JOIN' | 'CHALLENGE_REWARD' | 'SYSTEM_BONUS' | 'REFERRAL_BONUS';
+  description: string;
+  relatedChallengeId?: number;
+  createdAt: string;
+}
+
+export interface TransactionResponse {
+  success: boolean;
+  data: Transaction[];
+}
+
+export const getTransactionHistory = (): Promise<TransactionResponse> => {
+  return fetchFromAPI<TransactionResponse>('/wallet/transactions');
+};
+
+// User Challenge interfaces
+export interface UserChallenge {
+  id: string;
+  userId: string;
+  challengeId: number;
+  status: 'ACTIVE' | 'COMPLETED' | 'FAILED';
+  progress: number;
+  stakeAmount: number;
+  joinedAt: string;
+  completedAt?: string;
+  challenge: APIChallenge;
+}
+
+export interface UserChallengesResponse {
+  success: boolean;
+  count: number;
+  data: UserChallenge[];
+}
+
+export const getUserActiveChallenges = (): Promise<UserChallengesResponse> => {
+  return fetchFromAPI<UserChallengesResponse>('/challenges/user/active');
+};
+
+// Join challenge interface
+export interface JoinChallengeResponse {
+  success: boolean;
+  message: string;
+  data?: {
+    userChallenge: UserChallenge;
+    newWalletBalance: number;
+  };
+}
+
+export const joinChallenge = (challengeId: number): Promise<JoinChallengeResponse> => {
+  return fetchFromAPI<JoinChallengeResponse>(`/challenges/${challengeId}/join`, {
+    method: 'POST',
+  });
+};
+
 // Add other API calls as needed 

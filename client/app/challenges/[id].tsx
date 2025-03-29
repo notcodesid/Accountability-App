@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Image, StatusBar } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Image, StatusBar, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { HomeColors, OnboardingColors } from '../../constants/Colors';
 import { useLocalSearchParams, router } from 'expo-router';
 import SafeScreenView from '../../components/SafeScreenView';
 import { LinearGradient } from 'expo-linear-gradient';
-import { getChallengeById } from '../../services/api';
+import { getChallengeById, joinChallenge, getWalletBalance, getUserActiveChallenges } from '../../services/api';
 import LoadingSpinner from '../../components/LoadingSpinner';
 
 // Mock challenge data as fallback
@@ -43,9 +43,14 @@ export default function ChallengeDetailsScreen() {
     const [challenge, setChallenge] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [joiningChallenge, setJoiningChallenge] = useState(false);
+    const [walletBalance, setWalletBalance] = useState<number | null>(null);
+    const [alreadyJoined, setAlreadyJoined] = useState(false);
     
     useEffect(() => {
         fetchChallengeDetails();
+        fetchWalletBalance();
+        checkIfAlreadyJoined();
     }, [challengeId]);
     
     const fetchChallengeDetails = async () => {
@@ -119,6 +124,109 @@ export default function ChallengeDetailsScreen() {
             setError('An error occurred while fetching challenge details');
         } finally {
             setLoading(false);
+        }
+    };
+    
+    const fetchWalletBalance = async () => {
+        try {
+            const response = await getWalletBalance();
+            if (response.success && response.data) {
+                setWalletBalance(response.data.balance);
+            }
+        } catch (error) {
+            console.error('Error fetching wallet balance:', error);
+        }
+    };
+    
+    const checkIfAlreadyJoined = async () => {
+        try {
+            const response = await getUserActiveChallenges();
+            if (response.success && response.data) {
+                // Check if user has already joined this challenge
+                const joined = response.data.some(
+                    (userChallenge) => userChallenge.challengeId.toString() === challengeId
+                );
+                setAlreadyJoined(joined);
+            }
+        } catch (error) {
+            console.error('Error checking joined challenges:', error);
+        }
+    };
+    
+    const handleJoinChallenge = async () => {
+        try {
+            // Validate wallet balance
+            if (walletBalance === null) {
+                Alert.alert('Error', 'Could not verify wallet balance. Please try again.');
+                return;
+            }
+            
+            // Get stake amount from challenge
+            const stakeAmount = challenge.userStake || parseInt(challenge.contribution?.replace('$', '')) * 100 || 0;
+            
+            // Check if user has enough balance
+            if (walletBalance < stakeAmount) {
+                Alert.alert(
+                    'Insufficient Balance',
+                    `You need ${stakeAmount / 100} ACC tokens to join this challenge. Please add funds to your wallet.`
+                );
+                return;
+            }
+            
+            // Confirm action
+            Alert.alert(
+                'Join Challenge',
+                `Are you sure you want to join this challenge? ${stakeAmount / 100} ACC will be deducted from your wallet.`,
+                [
+                    {
+                        text: 'Cancel',
+                        style: 'cancel',
+                    },
+                    {
+                        text: 'Join',
+                        onPress: async () => {
+                            setJoiningChallenge(true);
+                            try {
+                                const response = await joinChallenge(parseInt(challengeId));
+                                
+                                if (response.success) {
+                                    // Update wallet balance
+                                    if (response.data?.newWalletBalance !== undefined) {
+                                        setWalletBalance(response.data.newWalletBalance);
+                                    }
+                                    
+                                    // Show success and mark as joined
+                                    Alert.alert(
+                                        'Success!',
+                                        'You have successfully joined the challenge.',
+                                        [
+                                            {
+                                                text: 'View My Challenges',
+                                                onPress: () => router.push('/challenges'),
+                                            },
+                                            {
+                                                text: 'Stay Here',
+                                                style: 'cancel',
+                                            },
+                                        ]
+                                    );
+                                    setAlreadyJoined(true);
+                                } else {
+                                    Alert.alert('Error', response.message || 'Failed to join challenge');
+                                }
+                            } catch (error) {
+                                Alert.alert('Error', 'An unexpected error occurred. Please try again.');
+                                console.error('Error joining challenge:', error);
+                            } finally {
+                                setJoiningChallenge(false);
+                            }
+                        },
+                    },
+                ]
+            );
+        } catch (error) {
+            Alert.alert('Error', 'An unexpected error occurred. Please try again.');
+            console.error('Error in join challenge flow:', error);
         }
     };
     
@@ -277,16 +385,34 @@ export default function ChallengeDetailsScreen() {
                         </View>
                     )}
                 </View>
+                
+                {/* Display wallet balance info if needed */}
+                {walletBalance !== null && (
+                    <View style={styles.walletInfoContainer}>
+                        <Text style={styles.walletInfoText}>
+                            Wallet Balance: {walletBalance.toLocaleString()} ACC
+                        </Text>
+                    </View>
+                )}
             </ScrollView>
             
-            {challenge.status !== 'completed' && (
-                <View style={styles.actionContainer}>
-                    <TouchableOpacity style={styles.actionButton}>
-                        <Ionicons name="play-circle" size={24} color="#fff" style={styles.actionIcon} />
-                        <Text style={styles.actionButtonText}>Start</Text>
+            <View style={styles.actionContainer}>
+                {joiningChallenge ? (
+                    <View style={[styles.actionButton, styles.loadingButton]}>
+                        <Text style={styles.actionButtonText}>Joining Challenge...</Text>
+                    </View>
+                ) : alreadyJoined ? (
+                    <View style={[styles.actionButton, styles.joinedButton]}>
+                        <Ionicons name="checkmark-circle" size={20} color="#fff" style={styles.actionIcon} />
+                        <Text style={styles.actionButtonText}>Challenge Joined</Text>
+                    </View>
+                ) : (
+                    <TouchableOpacity style={styles.actionButton} onPress={handleJoinChallenge}>
+                        <Ionicons name="flag" size={20} color="#fff" style={styles.actionIcon} />
+                        <Text style={styles.actionButtonText}>Start Challenge</Text>
                     </TouchableOpacity>
-                </View>
-            )}
+                )}
+            </View>
         </SafeScreenView>
     );
 }
@@ -519,5 +645,23 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontSize: 16,
         fontWeight: 'bold',
+    },
+    walletInfoContainer: {
+        backgroundColor: HomeColors.challengeCard,
+        borderRadius: 10,
+        padding: 10,
+        marginBottom: 20,
+        marginHorizontal: 15,
+    },
+    walletInfoText: {
+        fontSize: 14,
+        color: HomeColors.text,
+        textAlign: 'center',
+    },
+    loadingButton: {
+        backgroundColor: HomeColors.textSecondary,
+    },
+    joinedButton: {
+        backgroundColor: '#4CAF50', // Green color for joined status
     },
 }); 
