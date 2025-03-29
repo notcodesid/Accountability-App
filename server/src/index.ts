@@ -2,10 +2,11 @@ import express from "express";
 import cors from "cors";
 import challengesRoute from "./route/challenge";
 import authRoutes from "./route/auth";
+import walletRoutes from "./route/wallet";
 import { authenticate } from "./middleware/auth";
 
 const app = express();
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(express.json());
@@ -23,6 +24,9 @@ app.use("/api/auth", authRoutes);
 // Note: We're not applying authentication middleware to challenges routes yet
 // to keep compatibility with the existing frontend. Add it later when the frontend is ready.
 app.use("/api/challenges", challengesRoute);
+
+// Wallet routes - protected by default
+app.use("/api/wallet", walletRoutes);
 
 // Example of a protected route
 app.get("/api/protected", authenticate, (req, res) => {

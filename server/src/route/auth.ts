@@ -1,4 +1,4 @@
-import express, { Request, Response, RequestHandler } from 'express';
+import express, { Request, Response } from 'express';
 import { z } from 'zod'; // For input validation
 import prisma from './prisma';
 import { hashPassword, comparePassword } from '../lib/password';
@@ -23,7 +23,7 @@ const signinSchema = z.object({
  * Sign up a new user
  * POST /api/auth/signup
  */
-const signupHandler: RequestHandler = async (req, res) => {
+const signupHandler = async (req: Request, res: Response) => {
   try {
     // Validate input
     const validationResult = signupSchema.safeParse(req.body);
@@ -109,7 +109,7 @@ const signupHandler: RequestHandler = async (req, res) => {
  * Sign in an existing user
  * POST /api/auth/signin
  */
-const signinHandler: RequestHandler = async (req, res) => {
+const signinHandler = async (req: Request, res: Response) => {
   try {
     // Validate input
     const validationResult = signinSchema.safeParse(req.body);
@@ -187,7 +187,7 @@ const signinHandler: RequestHandler = async (req, res) => {
  * GET /api/auth/me (protected route)
  * This will be used by the frontend to verify token validity and get current user data
  */
-const getMeHandler: RequestHandler = async (req, res) => {
+const getMeHandler = async (req: Request, res: Response) => {
   try {
     // Get token from header
     const authHeader = req.headers.authorization;
@@ -221,6 +221,7 @@ const getMeHandler: RequestHandler = async (req, res) => {
         id: true,
         email: true,
         username: true,
+        wallet: true,
         createdAt: true,
         updatedAt: true,
       },

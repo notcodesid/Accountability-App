@@ -135,6 +135,11 @@ export interface AuthResponse {
     id: number;
     email: string;
     username: string;
+    wallet?: {
+      id: number;
+      balance: number;
+      currency: string;
+    };
   };
 }
 
@@ -188,6 +193,21 @@ export const isAuthenticated = async (): Promise<boolean> => {
 // Logout function
 export const logout = async (): Promise<void> => {
   await removeAuthToken();
+};
+
+// Wallet interfaces
+export interface WalletData {
+  balance: number;
+}
+
+export interface WalletResponse {
+  success: boolean;
+  data: WalletData;
+}
+
+// Fetch wallet information
+export const getWalletBalance = (): Promise<WalletResponse> => {
+  return fetchFromAPI<WalletResponse>('/wallet');
 };
 
 // Add other API calls as needed 

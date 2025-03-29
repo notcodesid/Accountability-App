@@ -208,6 +208,7 @@ const getMeHandler = (req, res) => __awaiter(void 0, void 0, void 0, function* (
                 id: true,
                 email: true,
                 username: true,
+                wallet: true,
                 createdAt: true,
                 updatedAt: true,
             },

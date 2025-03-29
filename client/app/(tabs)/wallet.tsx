@@ -1,10 +1,48 @@
-import { StyleSheet, Text, View, TouchableOpacity, Image, ScrollView, StatusBar } from "react-native";
+import React, { useEffect, useState } from 'react';
+import { StyleSheet, Text, View, TouchableOpacity, Image, ScrollView, StatusBar, ActivityIndicator, Alert } from "react-native";
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, HomeColors, OnboardingColors } from '../../constants/Colors';
 import SafeScreenView from '../../components/SafeScreenView';
 import { LinearGradient } from 'expo-linear-gradient';
+import { getWalletBalance } from '../../services/api';
+import { logError } from '../../constants/Environment';
 
 export default function Wallet() {
+    const [walletBalance, setWalletBalance] = useState<number | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        fetchUserWallet();
+    }, []);
+
+    const fetchUserWallet = async () => {
+        try {
+            // Initialize with default values
+            setWalletBalance(2450); // Default value for demo purposes
+            
+            setLoading(true);
+            const response = await getWalletBalance();
+            
+            if (response.success && response.data) {
+                // Update with actual wallet data from API
+                setWalletBalance(response.data.balance);
+            } else {
+                // Log the error but don't show it to user in this case
+                logError('API response unsuccessful:', 'Could not fetch wallet data');
+            }
+        } catch (error) {
+            console.error('Failed to fetch wallet data:', error);
+            setError('Network error. Using demo data.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Calculate USD equivalent (for display purposes)
+    const usdEquivalent = walletBalance !== null ? 
+        (walletBalance / 100).toFixed(2) : '0.00';
+
     return (
         <SafeScreenView style={styles.container} backgroundColor={HomeColors.background} scrollable={false}>
             <StatusBar barStyle="light-content" />
@@ -26,12 +64,22 @@ export default function Wallet() {
             <View style={styles.balanceCard}>
                 <View style={styles.balanceContainer}>
                     <Text style={styles.balanceLabel}>Available Balance</Text>
-                    <View style={styles.balanceRow}>
-                        <Ionicons name="wallet" size={32} color={OnboardingColors.accentColor} />
-                        <Text style={styles.balanceAmount}>2,450</Text>
-                        <Text style={styles.balanceCurrency}>ACC</Text>
-                    </View>
-                    <Text style={styles.balanceUsd}>≈ $24.50 USD</Text>
+                    {loading ? (
+                        <ActivityIndicator size="large" color={OnboardingColors.accentColor} />
+                    ) : error ? (
+                        <Text style={styles.errorText}>{error}</Text>
+                    ) : (
+                        <>
+                            <View style={styles.balanceRow}>
+                                <Ionicons name="wallet" size={32} color={OnboardingColors.accentColor} />
+                                <Text style={styles.balanceAmount}>
+                                    {walletBalance !== null ? walletBalance.toLocaleString() : '0'}
+                                </Text>
+                                <Text style={styles.balanceCurrency}>ACC</Text>
+                            </View>
+                            <Text style={styles.balanceUsd}>≈ ${usdEquivalent} USD</Text>
+                        </>
+                    )}
                 </View>
                 <View style={styles.actionsRow}>
                     <TouchableOpacity style={styles.actionButton}>
@@ -214,7 +262,7 @@ export default function Wallet() {
                         </View>
                     </View>
                 </View>
-        </View>
+            </View>
         </SafeScreenView>
     );
 }
@@ -467,5 +515,10 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontWeight: '500',
         fontSize: 12,
-    }
+    },
+    errorText: {
+        color: '#FF5722',
+        fontSize: 14,
+        marginTop: 10,
+    },
 });

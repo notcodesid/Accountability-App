@@ -18,6 +18,7 @@ model User {
   email     String   @unique
   username  String   @unique
   password  String
+  wallet    Int @default(100000)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
