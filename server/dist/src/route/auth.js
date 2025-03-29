@@ -211,6 +211,7 @@ const getMeHandler = (req, res) => __awaiter(void 0, void 0, void 0, function* (
                 wallet: true,
                 createdAt: true,
                 updatedAt: true,
+                leaderboardEntry: true,
             },
         });
         if (!user) {
@@ -219,6 +220,29 @@ const getMeHandler = (req, res) => __awaiter(void 0, void 0, void 0, function* (
                 message: 'User not found',
             });
             return;
+        }
+        // Check if user has a leaderboard entry, create one if it doesn't exist
+        if (!user.leaderboardEntry) {
+            // Get the last rank to put the user at the end
+            const lastRank = yield prisma_1.default.leaderboardUser.findFirst({
+                orderBy: {
+                    rank: 'desc',
+                },
+                select: {
+                    rank: true,
+                },
+            });
+            const newRank = lastRank ? lastRank.rank + 1 : 1;
+            yield prisma_1.default.leaderboardUser.create({
+                data: {
+                    userId: user.id,
+                    name: user.username,
+                    points: 500, // Default starting points
+                    avatar: 'https://randomuser.me/api/portraits/lego/1.jpg', // Default avatar
+                    rank: newRank,
+                },
+            });
+            console.log(`Created leaderboard entry for user ${user.username}`);
         }
         res.status(200).json({
             success: true,

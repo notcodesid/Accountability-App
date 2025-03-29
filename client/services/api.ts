@@ -269,4 +269,34 @@ export const joinChallenge = (challengeId: number): Promise<JoinChallengeRespons
   });
 };
 
+// Leaderboard interfaces
+export interface LeaderboardUser {
+  id: number;
+  userId: string;
+  name: string;
+  points: number;
+  avatar: string;
+  rank: number;
+  updatedAt: string;
+}
+
+export interface LeaderboardResponse {
+  success: boolean;
+  count: number;
+  data: LeaderboardUser[];
+}
+
+export const getLeaderboard = (): Promise<LeaderboardResponse> => {
+  return fetchFromAPI<LeaderboardResponse>('/leaderboard');
+};
+
+export interface UserRankResponse {
+  success: boolean;
+  data: LeaderboardUser & { actualRank: number };
+}
+
+export const getUserRank = (userId: string): Promise<UserRankResponse> => {
+  return fetchFromAPI<UserRankResponse>(`/leaderboard/user/${userId}`);
+};
+
 // Add other API calls as needed 

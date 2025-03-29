@@ -3,6 +3,7 @@ import cors from "cors";
 import challengesRoute from "./route/challenge";
 import authRoutes from "./route/auth";
 import walletRoutes from "./route/wallet";
+import leaderboardRoutes from "./route/leaderboard";
 import { authenticate } from "./middleware/auth";
 
 const app = express();
@@ -27,6 +28,9 @@ app.use("/api/challenges", challengesRoute);
 
 // Wallet routes - protected by default
 app.use("/api/wallet", walletRoutes);
+
+// Leaderboard routes - publicly accessible
+app.use("/api/leaderboard", leaderboardRoutes);
 
 // Example of a protected route
 app.get("/api/protected", authenticate, (req, res) => {

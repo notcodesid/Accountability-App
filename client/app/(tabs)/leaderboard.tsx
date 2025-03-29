@@ -1,10 +1,14 @@
-import { StyleSheet, Text, View, FlatList, TouchableOpacity, Image, StatusBar } from "react-native";
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, Text, View, FlatList, TouchableOpacity, Image, StatusBar, ActivityIndicator } from "react-native";
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, HomeColors, OnboardingColors } from '../../constants/Colors';
 import SafeScreenView from '../../components/SafeScreenView';
 import { LinearGradient } from 'expo-linear-gradient';
+import { getLeaderboard, getUserRank, LeaderboardUser as ApiLeaderboardUser } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
+import LoadingSpinner from '../../components/LoadingSpinner';
 
-// Define interface for leaderboard user data
+// Interface for leaderboard user
 interface LeaderboardUser {
     id: number;
     name: string;
@@ -14,22 +18,111 @@ interface LeaderboardUser {
 }
 
 export default function Leaderboard() {
-    // Sample data for the leaderboard
-    const leaderboardData: LeaderboardUser[] = [
-        { id: 1, name: 'Goku', points: 2850, avatar: 'https://i.pinimg.com/736x/e2/f0/6c/e2f06c9101dc22814be2a2352f7dc871.jpg', rank: 1 },
-        { id: 2, name: 'Luffy', points: 2720, avatar: 'https://i.pinimg.com/736x/0d/98/b2/0d98b2916254548f2c79a57eb8768969.jpg', rank: 2 },
-        { id: 3, name: 'Levi Ackerman', points: 2540, avatar: 'https://i.pinimg.com/736x/49/0c/9e/490c9ef127fca74c07c339a998e96286.jpg', rank: 3 },
-        { id: 4, name: 'Light Yagami', points: 2350, avatar: 'https://i.pinimg.com/736x/91/3a/7d/913a7d47adda9de9a441c7a6c554a211.jpg', rank: 4 },
-        { id: 5, name: 'Naruto Uzumaki', points: 2180, avatar: 'https://i.pinimg.com/736x/4a/28/78/4a2878cd36ba397be2163c55cfef0026.jpg', rank: 5 },
-        { id: 6, name: 'Itachi Uchiha', points: 2050, avatar: 'https://i.pinimg.com/736x/ad/d7/6f/add76f09ad6577fe5c76f7af54adf633.jpg', rank: 6 },
-        { id: 7, name: 'Edward Elric', points: 1920, avatar: 'https://i.pinimg.com/736x/dd/ee/f5/ddeef5dd4173a48e8f8d69272aa064ca.jpg', rank: 7 },
-        { id: 8, name: ' Gojo Satoru ', points: 1870, avatar: 'https://i.pinimg.com/736x/b9/66/8b/b9668b8233a769967e4ba7cdf0e0d3bf.jpg', rank: 8 },
-        { id: 9, name: ' Eren Yeager', points: 1760, avatar: 'https://randomuser.me/api/portraits/men/62.jpg', rank: 9 },
-        { id: 10, name: 'Zoro', points: 1650, avatar: 'https://i.pinimg.com/736x/40/15/36/4015368ab3afc5b1e352fe56b8d356b2.jpg', rank: 10 },
-    ];
+    const { user } = useAuth();
+    const [leaderboardData, setLeaderboardData] = useState<LeaderboardUser[]>([]);
+    const [myProfile, setMyProfile] = useState<LeaderboardUser | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
-    // My profile data
-    const myProfile: LeaderboardUser = { id: 0, name: 'You', points: 2050, avatar: 'https://pbs.twimg.com/profile_images/1900043039831449603/EzgPL3sp_400x400.jpg', rank: 34 };
+    useEffect(() => {
+        fetchLeaderboardData();
+    }, []);
+
+    const fetchLeaderboardData = async () => {
+        try {
+            setLoading(true);
+            setError(null);
+
+            // Fetch leaderboard data
+            const response = await getLeaderboard();
+
+            if (response.success) {
+                // Transform API data to match UI format
+                const transformedData = response.data.map(item => ({
+                    id: item.id,
+                    name: item.name,
+                    points: item.points,
+                    avatar: item.avatar,
+                    rank: item.rank
+                }));
+                
+                setLeaderboardData(transformedData);
+                
+                // If user is logged in, fetch their rank
+                if (user?.id) {
+                    try {
+                        // Convert user.id to string to ensure it matches the expected format in the API
+                        const userId = String(user.id);
+                        console.log("Fetching rank for user ID:", userId);
+                        
+                        const userRankResponse = await getUserRank(userId);
+                        
+                        if (userRankResponse.success) {
+                            const { data } = userRankResponse;
+                            setMyProfile({
+                                id: data.id,
+                                name: 'You',
+                                points: data.points,
+                                avatar: data.avatar,
+                                rank: data.actualRank
+                            });
+                        }
+                    } catch (userRankError) {
+                        console.error('Error fetching user rank:', userRankError);
+                        
+                        // Try to find user in the leaderboard data as a fallback
+                        if (user.username) {
+                            const userEntry = transformedData.find(entry => 
+                                entry.name.toLowerCase() === user.username?.toLowerCase()
+                            );
+                            
+                            if (userEntry) {
+                                setMyProfile({
+                                    ...userEntry,
+                                    name: 'You'
+                                });
+                                console.log("Found user in leaderboard data:", userEntry);
+                            } else {
+                                // Create a default profile if fetch fails
+                                setMyProfile({
+                                    id: 0,
+                                    name: 'You',
+                                    points: 0,
+                                    avatar: 'https://randomuser.me/api/portraits/lego/1.jpg',
+                                    rank: transformedData.length + 1
+                                });
+                            }
+                        } else {
+                            // Create a default profile if fetch fails
+                            setMyProfile({
+                                id: 0,
+                                name: 'You',
+                                points: 0,
+                                avatar: 'https://randomuser.me/api/portraits/lego/1.jpg',
+                                rank: transformedData.length + 1
+                            });
+                        }
+                    }
+                } else {
+                    // Default profile for not logged in users
+                    setMyProfile({
+                        id: 0,
+                        name: 'You',
+                        points: 0,
+                        avatar: 'https://randomuser.me/api/portraits/lego/1.jpg',
+                        rank: transformedData.length + 1
+                    });
+                }
+            } else {
+                setError('Failed to fetch leaderboard data');
+            }
+        } catch (err) {
+            console.error('Error fetching leaderboard:', err);
+            setError('An error occurred while fetching leaderboard data');
+        } finally {
+            setLoading(false);
+        }
+    };
 
     // Render a ranking item for positions 4 and below
     const renderRankItem = ({ item }: { item: LeaderboardUser }) => (
@@ -43,6 +136,47 @@ export default function Leaderboard() {
             </View>
         </View>
     );
+
+    if (loading) {
+        return (
+            <SafeScreenView style={styles.container} backgroundColor={HomeColors.background}>
+                <StatusBar barStyle="light-content" />
+                <View style={styles.loadingContainer}>
+                    <LoadingSpinner message="Loading leaderboard..." />
+                </View>
+            </SafeScreenView>
+        );
+    }
+
+    if (error) {
+        return (
+            <SafeScreenView style={styles.container} backgroundColor={HomeColors.background}>
+                <StatusBar barStyle="light-content" />
+                <View style={styles.errorContainer}>
+                    <Ionicons name="alert-circle-outline" size={60} color={HomeColors.textSecondary} />
+                    <Text style={styles.errorText}>{error}</Text>
+                    <TouchableOpacity 
+                        style={styles.retryButton}
+                        onPress={fetchLeaderboardData}
+                    >
+                        <Text style={styles.retryButtonText}>Try Again</Text>
+                    </TouchableOpacity>
+                </View>
+            </SafeScreenView>
+        );
+    }
+
+    // Ensure we have at least 3 items for the top podium
+    const topUsers = leaderboardData.slice(0, 3);
+    while (topUsers.length < 3) {
+        topUsers.push({
+            id: -topUsers.length,
+            name: 'Unknown',
+            points: 0,
+            avatar: 'https://randomuser.me/api/portraits/lego/0.jpg',
+            rank: topUsers.length + 1
+        });
+    }
 
     return (
         <SafeScreenView style={styles.container} backgroundColor={HomeColors.background} scrollable={false}>
@@ -68,11 +202,11 @@ export default function Leaderboard() {
                     <View style={styles.rankBadge}>
                         <Text style={styles.rankText}>3</Text>
                     </View>
-                    <Image source={{ uri: leaderboardData[2].avatar }} style={styles.avatar} />
-                    <Text style={styles.userName} numberOfLines={1}>{leaderboardData[2].name}</Text>
+                    <Image source={{ uri: topUsers[2].avatar }} style={styles.avatar} />
+                    <Text style={styles.userName} numberOfLines={1}>{topUsers[2].name}</Text>
                     <View style={styles.pointsContainer}>
                         <Ionicons name="star" size={14} color="#FFD700" />
-                        <Text style={styles.pointsText}>{leaderboardData[2].points}</Text>
+                        <Text style={styles.pointsText}>{topUsers[2].points}</Text>
                     </View>
                 </View>
                 
@@ -81,11 +215,11 @@ export default function Leaderboard() {
                     <View style={styles.rankBadge}>
                         <Text style={styles.rankText}>1</Text>
                     </View>
-                    <Image source={{ uri: leaderboardData[0].avatar }} style={[styles.avatar, styles.avatarFirst]} />
-                    <Text style={styles.userName} numberOfLines={1}>{leaderboardData[0].name}</Text>
+                    <Image source={{ uri: topUsers[0].avatar }} style={[styles.avatar, styles.avatarFirst]} />
+                    <Text style={styles.userName} numberOfLines={1}>{topUsers[0].name}</Text>
                     <View style={styles.pointsContainer}>
                         <Ionicons name="star" size={14} color="#FFD700" />
-                        <Text style={styles.pointsText}>{leaderboardData[0].points}</Text>
+                        <Text style={styles.pointsText}>{topUsers[0].points}</Text>
                     </View>
                 </View>
                 
@@ -94,11 +228,11 @@ export default function Leaderboard() {
                     <View style={styles.rankBadge}>
                         <Text style={styles.rankText}>2</Text>
                     </View>
-                    <Image source={{ uri: leaderboardData[1].avatar }} style={styles.avatar} />
-                    <Text style={styles.userName} numberOfLines={1}>{leaderboardData[1].name}</Text>
+                    <Image source={{ uri: topUsers[1].avatar }} style={styles.avatar} />
+                    <Text style={styles.userName} numberOfLines={1}>{topUsers[1].name}</Text>
                     <View style={styles.pointsContainer}>
                         <Ionicons name="star" size={14} color="#FFD700" />
-                        <Text style={styles.pointsText}>{leaderboardData[1].points}</Text>
+                        <Text style={styles.pointsText}>{topUsers[1].points}</Text>
                     </View>
                 </View>
             </View>
@@ -109,17 +243,19 @@ export default function Leaderboard() {
                 keyExtractor={item => item.id.toString()}
                 style={styles.rankingsList}
                 ListFooterComponent={
-                    <View style={styles.myRankCard}>
-                        <View style={styles.rankItem}>
-                            <Text style={[styles.rankNumber, styles.myRankNumber]}>{myProfile.rank}</Text>
-                            <Image source={{ uri: myProfile.avatar }} style={styles.smallAvatar} />
-                            <Text style={[styles.rankName, styles.myRankName]}>{myProfile.name}</Text>
-                            <View style={styles.rankPoints}>
-                                <Ionicons name="star" size={14} color="#FFD700" />
-                                <Text style={[styles.rankPointsText, styles.myRankPointsText]}>{myProfile.points}</Text>
+                    myProfile && (
+                        <View style={styles.myRankCard}>
+                            <View style={styles.rankItem}>
+                                <Text style={[styles.rankNumber, styles.myRankNumber]}>{myProfile.rank}</Text>
+                                <Image source={{ uri: myProfile.avatar }} style={styles.smallAvatar} />
+                                <Text style={[styles.rankName, styles.myRankName]}>{myProfile.name}</Text>
+                                <View style={styles.rankPoints}>
+                                    <Ionicons name="star" size={14} color="#FFD700" />
+                                    <Text style={[styles.rankPointsText, styles.myRankPointsText]}>{myProfile.points}</Text>
+                                </View>
                             </View>
                         </View>
-                    </View>
+                    )
                 }
             />
         </SafeScreenView>
@@ -129,6 +265,34 @@ export default function Leaderboard() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+    },
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    errorContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 20,
+    },
+    errorText: {
+        fontSize: 16,
+        color: HomeColors.textSecondary,
+        textAlign: 'center',
+        marginTop: 10,
+        marginBottom: 20,
+    },
+    retryButton: {
+        backgroundColor: OnboardingColors.accentColor,
+        paddingVertical: 10,
+        paddingHorizontal: 20,
+        borderRadius: 20,
+    },
+    retryButtonText: {
+        color: '#fff',
+        fontWeight: '600',
     },
     selectedHeaderContainer: {
         width: '100%',

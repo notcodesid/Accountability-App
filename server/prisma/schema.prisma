@@ -23,6 +23,7 @@ model User {
   updatedAt        DateTime        @updatedAt
   userChallenges   UserChallenge[] // Challenges the user has joined
   transactions     Transaction[]   // User's wallet transactions
+  leaderboardEntry LeaderboardUser?
 }
 
 model Challenge {
@@ -72,6 +73,18 @@ model Transaction {
   relatedChallengeId Int?         // Optional reference to a challenge
   createdAt      DateTime         @default(now())
   user           User             @relation(fields: [userId], references: [id])
+}
+
+// Leaderboard data
+model LeaderboardUser {
+  id         Int      @id @default(autoincrement())
+  userId     String   @unique
+  name       String
+  points     Int
+  avatar     String
+  rank       Int
+  updatedAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id])
 }
 
 enum ChallengeStatus {

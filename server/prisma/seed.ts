@@ -1,145 +1,95 @@
-import { PrismaClient, ChallengeDifficulty } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
+import { hashPassword } from '../src/lib/password';
 
 const prisma = new PrismaClient();
 
-async function resetDatabase() {
-  console.log('Resetting database...');
-  
-  // Delete all existing challenges
-  await prisma.challenge.deleteMany({});
-  
-  console.log('All data has been deleted.');
-}
+const leaderboardData = [
+  { name: 'Goku', points: 2850, avatar: 'https://i.pinimg.com/736x/e2/f0/6c/e2f06c9101dc22814be2a2352f7dc871.jpg', rank: 1 },
+  { name: 'Luffy', points: 2720, avatar: 'https://i.pinimg.com/736x/0d/98/b2/0d98b2916254548f2c79a57eb8768969.jpg', rank: 2 },
+  { name: 'Levi Ackerman', points: 2540, avatar: 'https://i.pinimg.com/736x/49/0c/9e/490c9ef127fca74c07c339a998e96286.jpg', rank: 3 },
+  { name: 'Light Yagami', points: 2350, avatar: 'https://i.pinimg.com/736x/91/3a/7d/913a7d47adda9de9a441c7a6c554a211.jpg', rank: 4 },
+  { name: 'Naruto Uzumaki', points: 2180, avatar: 'https://i.pinimg.com/736x/4a/28/78/4a2878cd36ba397be2163c55cfef0026.jpg', rank: 5 },
+  { name: 'Itachi Uchiha', points: 2050, avatar: 'https://i.pinimg.com/736x/ad/d7/6f/add76f09ad6577fe5c76f7af54adf633.jpg', rank: 6 },
+  { name: 'Edward Elric', points: 1920, avatar: 'https://i.pinimg.com/736x/dd/ee/f5/ddeef5dd4173a48e8f8d69272aa064ca.jpg', rank: 7 },
+  { name: 'Gojo Satoru', points: 1870, avatar: 'https://i.pinimg.com/736x/b9/66/8b/b9668b8233a769967e4ba7cdf0e0d3bf.jpg', rank: 8 },
+  { name: 'Eren Yeager', points: 1760, avatar: 'https://randomuser.me/api/portraits/men/62.jpg', rank: 9 },
+  { name: 'Zoro', points: 1650, avatar: 'https://i.pinimg.com/736x/40/15/36/4015368ab3afc5b1e352fe56b8d356b2.jpg', rank: 10 }
+];
 
 async function main() {
-  // First reset the database to remove all existing data
-  await resetDatabase();
+  console.log('Seeding database...');
 
-  // Create 5 fitness-focused challenges
-  const challenges = [
-    {
-      title: '5K Daily Steps Challenge',
-      description: 'Walk 5,000 steps every day to improve cardiovascular health and build a healthy daily movement habit.',
-      type: 'Fitness',
-      difficulty: ChallengeDifficulty.EASY,
-      image: 'https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?auto=format&fit=crop&w=1000',
-      startDate: new Date(2024, 3, 15), // April 15, 2024
-      endDate: new Date(2024, 4, 14), // May 14, 2024
-      duration: '30 days',
-      userStake: 2000, // $20.00
-      totalPrizePool: 30000, // $300.00
-      participantCount: 15,
-      rules: [
-        'Complete 5,000 steps daily (tracked by fitness app/device)',
-        'Sync step data with our platform daily',
-        'Steps must be logged within the 24-hour period',
-        'No carry-over of extra steps to the next day'
-      ],
-      metrics: '5,000 steps daily',
-      trackingMetrics: ['Step count', 'Distance covered', 'Consistency']
-    },
-    {
-      title: '20 Push-Ups Challenge',
-      description: 'Complete 20 push-ups daily to build upper body strength and establish a consistent exercise routine.',
-      type: 'Fitness',
-      difficulty: ChallengeDifficulty.MODERATE,
-      image: 'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?auto=format&fit=crop&w=1000',
-      startDate: new Date(2024, 3, 1), // April 1, 2024
-      endDate: new Date(2024, 3, 21), // April 21, 2024
-      duration: '21 days',
-      userStake: 2500, // $25.00
-      totalPrizePool: 25000, // $250.00
-      participantCount: 10,
-      rules: [
-        'Complete exactly 20 push-ups each day',
-        'Post a daily progress photo or video',
-        'You can split your daily goal into multiple sets',
-        'Modified push-ups are acceptable for beginners'
-      ],
-      metrics: '20 push-ups daily',
-      trackingMetrics: ['Push-up count', 'Form quality', 'Consistency']
-    },
-    {
-      title: '30-Minute Daily Workout',
-      description: 'Commit to 30 minutes of exercise every day, any form of movement counts as long as you keep your heart rate elevated.',
-      type: 'Fitness',
-      difficulty: ChallengeDifficulty.MODERATE,
-      image: 'https://images.unsplash.com/photo-1549060279-7e168fcee0c2?auto=format&fit=crop&w=1000',
-      startDate: new Date(2024, 4, 1), // May 1, 2024
-      endDate: new Date(2024, 4, 30), // May 30, 2024
-      duration: '30 days',
-      userStake: 3000, // $30.00
-      totalPrizePool: 45000, // $450.00
-      participantCount: 15,
-      rules: [
-        'Complete 30 minutes of continuous exercise daily',
-        'Log workout type and duration in the app',
-        'Heart rate must reach at least 50% of max during workout',
-        'Any form of exercise is valid (walking, running, cycling, HIIT, etc.)'
-      ],
-      metrics: '30 minutes of exercise daily',
-      trackingMetrics: ['Workout duration', 'Heart rate', 'Exercise type']
-    },
-    {
-      title: '10 Flight Stair Challenge',
-      description: 'Climb 10 flights of stairs every day to build lower body strength and improve cardiovascular fitness.',
-      type: 'Fitness',
-      difficulty: ChallengeDifficulty.MODERATE,
-      image: 'https://images.unsplash.com/photo-1605206809620-f13463473f1a?auto=format&fit=crop&w=1000',
-      startDate: new Date(2024, 3, 10), // April 10, 2024
-      endDate: new Date(2024, 3, 24), // April 24, 2024
-      duration: '14 days',
-      userStake: 2000, // $20.00
-      totalPrizePool: 24000, // $240.00
-      participantCount: 12,
-      rules: [
-        'Climb 10 flights of stairs daily (can be cumulative throughout the day)',
-        'Log each stair session with time and location',
-        'Stair-climbing machines at the gym are acceptable',
-        'Each flight must have at least 10 steps to count'
-      ],
-      metrics: '10 flights of stairs daily',
-      trackingMetrics: ['Flights climbed', 'Elevation gain', 'Time to complete']
-    },
-    {
-      title: '1-Mile Daily Run',
-      description: 'Run 1 mile every day to build running consistency and improve aerobic capacity.',
-      type: 'Fitness',
-      difficulty: ChallengeDifficulty.HARD,
-      image: 'https://images.unsplash.com/photo-1571008887538-b36bb32f4571?auto=format&fit=crop&w=1000',
-      startDate: new Date(2024, 5, 1), // June 1, 2024
-      endDate: new Date(2024, 5, 30), // June 30, 2024
-      duration: '30 days',
-      userStake: 4000, // $40.00
-      totalPrizePool: 60000, // $600.00
-      participantCount: 15,
-      rules: [
-        'Run at least 1 mile (1.6km) every day',
-        'Track run with GPS app or device',
-        'Indoor treadmill runs are acceptable',
-        'Minimum pace requirement: must be running, not walking',
-        'No banking miles - each day requires a separate 1-mile minimum run'
-      ],
-      metrics: '1 mile run daily',
-      trackingMetrics: ['Distance', 'Pace', 'Completion time']
-    }
-  ];
-
-  console.log('Starting to seed fitness challenges...');
-
-  for (const challengeData of challenges) {
-    const challenge = await prisma.challenge.create({
-      data: challengeData
+  // Create demo users for the leaderboard if they don't exist
+  for (const leaderData of leaderboardData) {
+    // Create a user with the same name (lowercase and no spaces as username)
+    const username = leaderData.name.toLowerCase().replace(/\s+/g, '');
+    
+    // Check if user already exists
+    const existingUser = await prisma.user.findUnique({
+      where: { username }
     });
-    console.log(`Created challenge: ${challenge.title}`);
+    
+    if (!existingUser) {
+      // Create the user
+      const hashedPassword = await hashPassword('password123');
+      
+      const user = await prisma.user.create({
+        data: {
+          email: `${username}@example.com`,
+          username,
+          password: hashedPassword,
+        },
+      });
+      
+      // Create the leaderboard entry
+      await prisma.leaderboardUser.create({
+        data: {
+          userId: user.id,
+          name: leaderData.name,
+          points: leaderData.points,
+          avatar: leaderData.avatar,
+          rank: leaderData.rank,
+        },
+      });
+      
+      console.log(`Created user and leaderboard entry for ${leaderData.name}`);
+    } else {
+      // If user exists, just update the leaderboard entry
+      const existingLeaderboardEntry = await prisma.leaderboardUser.findUnique({
+        where: { userId: existingUser.id }
+      });
+      
+      if (existingLeaderboardEntry) {
+        await prisma.leaderboardUser.update({
+          where: { id: existingLeaderboardEntry.id },
+          data: {
+            points: leaderData.points,
+            avatar: leaderData.avatar,
+            rank: leaderData.rank,
+          },
+        });
+        console.log(`Updated leaderboard entry for ${leaderData.name}`);
+      } else {
+        await prisma.leaderboardUser.create({
+          data: {
+            userId: existingUser.id,
+            name: leaderData.name,
+            points: leaderData.points,
+            avatar: leaderData.avatar,
+            rank: leaderData.rank,
+          },
+        });
+        console.log(`Created leaderboard entry for existing user ${leaderData.name}`);
+      }
+    }
   }
 
-  console.log('Seeding completed successfully.');
+  console.log('Seeding completed successfully!');
 }
 
 main()
   .catch((e) => {
-    console.error(e);
+    console.error('Error during seeding:', e);
     process.exit(1);
   })
   .finally(async () => {

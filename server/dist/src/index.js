@@ -8,6 +8,7 @@ const cors_1 = __importDefault(require("cors"));
 const challenge_1 = __importDefault(require("./route/challenge"));
 const auth_1 = __importDefault(require("./route/auth"));
 const wallet_1 = __importDefault(require("./route/wallet"));
+const leaderboard_1 = __importDefault(require("./route/leaderboard"));
 const auth_2 = require("./middleware/auth");
 const app = (0, express_1.default)();
 const PORT = process.env.PORT || 5000;
@@ -26,6 +27,8 @@ app.use("/api/auth", auth_1.default);
 app.use("/api/challenges", challenge_1.default);
 // Wallet routes - protected by default
 app.use("/api/wallet", wallet_1.default);
+// Leaderboard routes - publicly accessible
+app.use("/api/leaderboard", leaderboard_1.default);
 // Example of a protected route
 app.get("/api/protected", auth_2.authenticate, (req, res) => {
     res.json({
