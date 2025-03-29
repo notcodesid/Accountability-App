@@ -13,13 +13,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
-const client_1 = require("@prisma/client");
-const prisma = new client_1.PrismaClient();
+const prisma_1 = __importDefault(require("./prisma"));
 const router = express_1.default.Router();
 // GET all challenges as JSON
-router.get("/", (_req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getAllChallenges = (_req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const challenges = yield prisma.challenge.findMany();
+        const challenges = yield prisma_1.default.challenge.findMany();
         res.json({
             success: true,
             count: challenges.length,
@@ -34,5 +33,7 @@ router.get("/", (_req, res) => __awaiter(void 0, void 0, void 0, function* () {
             error: error instanceof Error ? error.message : "Unknown error"
         });
     }
-}));
+});
+// Register routes
+router.get("/", getAllChallenges);
 exports.default = router;

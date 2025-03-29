@@ -1,11 +1,10 @@
-import express, { Request, Response } from "express";
-import { PrismaClient } from '@prisma/client';
+import express, { RequestHandler } from "express";
+import prisma from "./prisma"
 
-const prisma = new PrismaClient();
 const router = express.Router();
 
 // GET all challenges as JSON
-router.get("/", async (_req, res) => {
+const getAllChallenges: RequestHandler = async (_req, res) => {
   try {
     const challenges = await prisma.challenge.findMany();
     res.json({
@@ -21,6 +20,9 @@ router.get("/", async (_req, res) => {
       error: error instanceof Error ? error.message : "Unknown error"
     });
   }
-});
+};
+
+// Register routes
+router.get("/", getAllChallenges);
 
 export default router;  
