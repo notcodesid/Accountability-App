@@ -40,7 +40,6 @@ export default function ChallengesScreen() {
         try {
             setLoading(true);
             setError(null);
-            
             const response = await getChallenges();
             
             if (response.success) {
@@ -206,10 +205,12 @@ export default function ChallengesScreen() {
     // Render loading state
     if (loading) {
         return (
-            <SafeScreenView style={styles.container} backgroundColor={HomeColors.background}>
-                <StatusBar barStyle="light-content" />
+            <>
+                <SafeScreenView style={styles.container} backgroundColor={HomeColors.background}>
+                    <StatusBar barStyle="light-content" />
+                </SafeScreenView>
                 <LoadingSpinner message="Loading challenges..." />
-            </SafeScreenView>
+            </>
         );
     }
 

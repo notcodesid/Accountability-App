@@ -8,7 +8,7 @@ interface LoadingSpinnerProps {
 
 const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({ message = 'Loading...' }) => {
   return (
-    <View style={styles.container}>
+    <View style={styles.overlayContainer}>
       <ActivityIndicator size="large" color={OnboardingColors.accentColor} />
       <Text style={styles.loadingText}>{message}</Text>
     </View>
@@ -16,19 +16,25 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({ message = 'Loading...' 
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
+  overlayContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    width: '100%',
+    height: '100%',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: HomeColors.background,
-    padding: 20,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    zIndex: 10,
   },
   loadingText: {
     marginTop: 15,
     fontSize: 16,
-    color: HomeColors.text,
+    color: '#ffffff',
     fontWeight: '500',
   },
 });
 
-export default LoadingSpinner; 
+export default LoadingSpinner;

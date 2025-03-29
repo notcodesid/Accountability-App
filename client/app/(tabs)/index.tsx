@@ -17,7 +17,7 @@ interface Challenge {
   difficulty: string;
   contributionAmount: string;
   prizeAmount: string;
-  type: string; 
+  type: string;
   metrics?: string;
   details?: string[];
   trackingMetrics?: string[];
@@ -28,18 +28,18 @@ export default function Home() {
   const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   useEffect(() => {
     fetchChallenges();
   }, []);
-  
+
   const fetchChallenges = async () => {
     try {
       setLoading(true);
       setError(null);
-      
+
       const response = await getChallenges();
-      
+
       if (response.success) {
         // Transform API data to match our UI format
         const transformedChallenges = response.data.map(apiChallenge => ({
@@ -67,21 +67,21 @@ export default function Home() {
       setLoading(false);
     }
   };
-  
-  const selectedChallengeData = selectedChallenge 
-    ? challenges.find(c => c.id === selectedChallenge) 
+
+  const selectedChallengeData = selectedChallenge
+    ? challenges.find(c => c.id === selectedChallenge)
     : null;
 
   const renderChallengeItem: ListRenderItem<Challenge> = ({ item }) => (
-    <TouchableOpacity 
+    <TouchableOpacity
       style={[
-        styles.challengeCard, 
+        styles.challengeCard,
         selectedChallenge === item.id && styles.selectedChallengeCard
       ]}
       onPress={() => setSelectedChallenge(selectedChallenge === item.id ? null : item.id)}
     >
-      <ImageBackground 
-        source={{ uri: item.image }} 
+      <ImageBackground
+        source={{ uri: item.image }}
         style={styles.challengeImage}
         imageStyle={styles.imageStyle}
       >
@@ -99,7 +99,7 @@ export default function Home() {
           </View>
         </LinearGradient>
       </ImageBackground>
-      
+
       <View style={styles.challengeDetails}>
         <View style={styles.detailRow}>
           <View style={styles.detailItem}>
@@ -111,7 +111,7 @@ export default function Home() {
             <Text style={styles.detailText}>{item.participants} participants</Text>
           </View>
         </View>
-        
+
         <View style={styles.detailRow}>
           <View style={styles.detailItem}>
             <Ionicons name="wallet" size={14} color={HomeColors.text} />
@@ -134,8 +134,8 @@ export default function Home() {
         <View style={styles.errorContainer}>
           <Ionicons name="alert-circle-outline" size={60} color={HomeColors.textSecondary} />
           <Text style={styles.errorText}>{error}</Text>
-          <TouchableOpacity 
-            style={styles.retryButton} 
+          <TouchableOpacity
+            style={styles.retryButton}
             onPress={fetchChallenges}
           >
             <Text style={styles.retryButtonText}>Retry</Text>
@@ -144,21 +144,23 @@ export default function Home() {
       </SafeScreenView>
     );
   }
-  
+
   // Render loading state
   if (loading) {
     return (
-      <SafeScreenView style={styles.container} backgroundColor={HomeColors.background}>
-        <StatusBar barStyle="light-content" />
+      <>
+        <SafeScreenView style={styles.container} backgroundColor={HomeColors.background}>
+          <StatusBar barStyle="light-content" />
+        </SafeScreenView>
         <LoadingSpinner message="Loading challenges..." />
-      </SafeScreenView>
+      </>
     );
   }
 
   return (
     <SafeScreenView style={styles.container} backgroundColor={HomeColors.background} scrollable={false}>
       <StatusBar barStyle="light-content" />
-      
+
       <View style={styles.selectedHeaderContainer}>
         <LinearGradient
           colors={['rgba(23, 23, 23, 0.9)', 'rgba(10, 10, 10, 0.95)']}
@@ -171,7 +173,7 @@ export default function Home() {
               // Selected Challenge Header Content
               <>
                 <Text style={styles.selectedHeaderTitle}>{selectedChallengeData.title}</Text>
-                
+
                 {selectedChallengeData.details ? (
                   <Text style={styles.selectedHeaderDetails}>
                     {selectedChallengeData.metrics} • {selectedChallengeData.details.join(' • ')}
@@ -192,7 +194,7 @@ export default function Home() {
           </View>
         </LinearGradient>
       </View>
-      
+
       <FlatList
         data={challenges}
         renderItem={renderChallengeItem}
@@ -206,7 +208,7 @@ export default function Home() {
         onRefresh={fetchChallenges}
         refreshing={loading}
       />
-      
+
       {selectedChallenge && (
         <View style={styles.startButtonContainer}>
           <TouchableOpacity style={styles.startButton} activeOpacity={0.8}>
