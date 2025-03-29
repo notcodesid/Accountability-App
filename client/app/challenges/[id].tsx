@@ -1,20 +1,22 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Image, StatusBar } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import {  HomeColors, OnboardingColors } from '../../constants/Colors';
+import { HomeColors, OnboardingColors } from '../../constants/Colors';
 import { useLocalSearchParams, router } from 'expo-router';
 import SafeScreenView from '../../components/SafeScreenView';
 import { LinearGradient } from 'expo-linear-gradient';
+import { getChallengeById } from '../../services/api';
+import LoadingSpinner from '../../components/LoadingSpinner';
 
-// Mock challenge data - this would be fetched from an API in a real app
-const CHALLENGES = {
+// Mock challenge data as fallback
+const MOCK_CHALLENGES = {
     '1': {
         id: '1',
         title: '10K Steps Daily',
         type: 'Steps',
         duration: '30 days',
         progress: 0.75,
-        participants: 156,
+        participantCount: 156,
         contribution: '$50',
         prizePool: '$7,800',
         status: 'active',
@@ -31,153 +33,124 @@ const CHALLENGES = {
         creatorName: 'Fitness Community',
         trackingMetrics: ['Steps Count', 'Distance Covered', 'Calories Burned']
     },
-    '2': {
-        id: '2',
-        title: '5K Pace Challenge',
-        type: 'Running',
-        duration: '21 days',
-        progress: 0.45,
-        participants: 89,
-        contribution: '$75',
-        prizePool: '$6,675',
-        status: 'active',
-        description: 'Improve your 5K running time over 21 days. Run at least 3 times per week and track your progress.',
-        rules: [
-            'Complete at least 3 runs per week',
-            'Each run must be at least 5K in distance',
-            'Track your time for each run',
-            'Final ranking based on improvement percentage'
-        ],
-        image: 'https://images.unsplash.com/photo-1571008887538-b36bb32f4571?auto=format&fit=crop&w=1000',
-        startDate: '2024-03-10',
-        endDate: '2024-03-31',
-        creatorName: 'Running Club',
-        trackingMetrics: ['Distance Covered', 'Speed & Pace', 'Workout Tracking']
-    },
-    '3': {
-        id: '3',
-        title: 'Active Minutes',
-        type: 'Activity',
-        duration: '14 days',
-        progress: 0.3,
-        participants: 124,
-        contribution: '$25',
-        prizePool: '$3,100',
-        status: 'active',
-        description: 'Accumulate at least 60 active minutes daily for 14 days. Any physical activity counts!',
-        rules: [
-            'Record at least 60 active minutes daily',
-            'Activities must be moderate to high intensity',
-            'Multiple sessions can be combined',
-            'Must verify with heart rate data'
-        ],
-        image: 'https://images.unsplash.com/photo-1470299067034-07c696e9ef07?auto=format&fit=crop&w=1000',
-        startDate: '2024-03-15',
-        endDate: '2024-03-29',
-        creatorName: 'Health Collective',
-        trackingMetrics: ['Move Minutes', 'Calories Burned']
-    },
-    '4': {
-        id: '4',
-        title: 'Morning Meditation',
-        type: 'Wellness',
-        duration: '60 days',
-        progress: 1.0,
-        participants: 208,
-        contribution: '$30',
-        prizePool: '$6,240',
-        status: 'completed',
-        description: 'Meditate for at least 10 minutes every morning for 60 days to establish a mindfulness habit.',
-        rules: [
-            'Meditate for 10+ minutes daily',
-            'Must be completed before 10 AM',
-            'Use approved meditation apps for tracking',
-            'Submit screenshot proof daily'
-        ],
-        image: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&w=1000',
-        startDate: '2024-01-01',
-        endDate: '2024-03-01',
-        creatorName: 'Wellness Circle',
-        trackingMetrics: ['Meditation Minutes', 'Consistency']
-    },
-    '5': {
-        id: '5',
-        title: 'Water Intake Challenge',
-        type: 'Health',
-        duration: '14 days',
-        progress: 1.0,
-        participants: 143,
-        contribution: '$20',
-        prizePool: '$2,860',
-        status: 'completed',
-        description: 'Drink at least 2 liters of water daily for 14 days. Track your hydration to build a healthy habit.',
-        rules: [
-            'Consume 2L of water daily minimum',
-            'Log intake in the app',
-            'Only water counts (no tea, coffee, etc.)',
-            'Submit photo evidence daily'
-        ],
-        image: 'https://images.unsplash.com/photo-1523362628745-0c100150b504?auto=format&fit=crop&w=1000',
-        startDate: '2024-02-01',
-        endDate: '2024-02-15',
-        creatorName: 'Health Habits',
-        trackingMetrics: ['Water Volume', 'Consistency']
-    },
-    '6': {
-        id: '6',
-        title: 'Book Reading Marathon',
-        type: 'Education',
-        duration: '30 days',
-        progress: 1.0,
-        participants: 95,
-        contribution: '$40',
-        prizePool: '$3,800',
-        status: 'completed',
-        description: 'Read for at least 30 minutes every day for 30 days. Expand your knowledge and build a reading habit.',
-        rules: [
-            'Read for 30+ minutes daily',
-            'Log your reading time and pages',
-            'Physical books, e-books, and audiobooks acceptable',
-            'Submit a short summary weekly'
-        ],
-        image: 'https://images.unsplash.com/photo-1519682337058-a94d519337bc?auto=format&fit=crop&w=1000',
-        startDate: '2024-01-15',
-        endDate: '2024-02-15',
-        creatorName: 'Book Lovers Club',
-        trackingMetrics: ['Reading Time', 'Pages Read']
-    },
-    '7': {
-        id: '7',
-        title: 'Plank Challenge',
-        type: 'Fitness',
-        duration: '30 days',
-        progress: 0.15,
-        participants: 67,
-        contribution: '$35',
-        prizePool: '$2,345',
-        status: 'active',
-        description: 'Build your core strength with a daily plank for 30 days. Start with 30 seconds and increase gradually.',
-        rules: [
-            'Complete daily plank exercise',
-            'Duration increases by 5 seconds each day',
-            'Submit video proof daily',
-            'Proper form required for validation'
-        ],
-        image: 'https://images.unsplash.com/photo-1574680178050-55c6a6a96e0a?auto=format&fit=crop&w=1000',
-        startDate: '2024-03-20',
-        endDate: '2024-04-19',
-        creatorName: 'Core Fitness',
-        trackingMetrics: ['Plank Time', 'Form Quality']
-    }
+    // Add more mock challenges if needed
 };
 
 export default function ChallengeDetailsScreen() {
     const { id } = useLocalSearchParams();
     const challengeId = Array.isArray(id) ? id[0] : id;
     
-    // In a real app, you would fetch challenge details from an API
-    const challenge = CHALLENGES[challengeId as keyof typeof CHALLENGES];
+    const [challenge, setChallenge] = useState<any>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     
+    useEffect(() => {
+        fetchChallengeDetails();
+    }, [challengeId]);
+    
+    const fetchChallengeDetails = async () => {
+        try {
+            setLoading(true);
+            setError(null);
+            
+            // Try to fetch from API first
+            try {
+                const response = await getChallengeById(challengeId);
+                
+                if (response.success && response.data) {
+                    // Format some fields for display
+                    const challengeData = {
+                        ...response.data,
+                        progress: response.data.progress || 0.0,
+                        contribution: `$${(response.data.userStake / 100).toFixed(0)}`,
+                        prizePool: `$${(response.data.totalPrizePool / 100).toFixed(0)}`,
+                        // Format dates to show only the date part
+                        startDate: response.data.startDate ? new Date(response.data.startDate).toLocaleDateString('en-US', { 
+                            year: 'numeric', 
+                            month: 'long', 
+                            day: 'numeric' 
+                        }) : "Coming Soon",
+                        endDate: response.data.endDate ? new Date(response.data.endDate).toLocaleDateString('en-US', { 
+                            year: 'numeric', 
+                            month: 'long', 
+                            day: 'numeric' 
+                        }) : "Coming Soon",
+                    };
+                    
+                    setChallenge(challengeData);
+                    setLoading(false);
+                    return;
+                }
+            } catch (apiError) {
+                console.log("API error, falling back to mock data:", apiError);
+                // Continue to fallback if API fails
+            }
+            
+            // Fallback to mock data if API fails or doesn't have this challenge
+            const mockChallenge = MOCK_CHALLENGES[challengeId as keyof typeof MOCK_CHALLENGES] || null;
+            
+            if (mockChallenge) {
+                console.log("Using mock data for challenge:", challengeId);
+                
+                // Format dates for mock data as well
+                if (mockChallenge.startDate) {
+                    mockChallenge.startDate = new Date(mockChallenge.startDate).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    });
+                }
+                
+                if (mockChallenge.endDate) {
+                    mockChallenge.endDate = new Date(mockChallenge.endDate).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    });
+                }
+                
+                setChallenge(mockChallenge);
+            } else {
+                // If we don't have a mock for this ID, set error
+                setError('Challenge not found');
+            }
+        } catch (err) {
+            console.error('Error fetching challenge details:', err);
+            setError('An error occurred while fetching challenge details');
+        } finally {
+            setLoading(false);
+        }
+    };
+    
+    // Render error state
+    if (error) {
+        return (
+            <SafeScreenView style={styles.container} backgroundColor={HomeColors.background}>
+                <StatusBar barStyle="light-content" />
+                <View style={styles.errorContainer}>
+                    <Ionicons name="alert-circle-outline" size={60} color={HomeColors.textSecondary} />
+                    <Text style={styles.errorText}>{error}</Text>
+                    <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+                        <Text style={styles.backButtonText}>Return to Challenges</Text>
+                    </TouchableOpacity>
+                </View>
+            </SafeScreenView>
+        );
+    }
+    
+    // Render loading state
+    if (loading) {
+        return (
+            <>
+                <SafeScreenView style={styles.container} backgroundColor={HomeColors.background}>
+                    <StatusBar barStyle="light-content" />
+                </SafeScreenView>
+                <LoadingSpinner message="Loading challenge..." />
+            </>
+        );
+    }
+    
+    // Render not found state
     if (!challenge) {
         return (
             <SafeScreenView style={styles.container} backgroundColor={HomeColors.background}>
@@ -240,27 +213,11 @@ export default function ChallengeDetailsScreen() {
                             </View>
                             <View style={styles.metaItem}>
                                 <Ionicons name="people" size={16} color={HomeColors.textSecondary} />
-                                <Text style={styles.metaText}>{challenge.participants} participants</Text>
+                                <Text style={styles.metaText}>{challenge.participantCount} participants</Text>
                             </View>
                         </View>
                     </View>
 
-                    <View style={styles.progressSection}>
-                        <View style={styles.progressHeader}>
-                            <Text style={styles.sectionTitle}>Your Progress</Text>
-                            <Text style={styles.progressPercentage}>{Math.round(challenge.progress * 100)}%</Text>
-                        </View>
-                        <View style={styles.progressContainer}>
-                            <View 
-                                style={[
-                                    styles.progressBar, 
-                                    { width: `${challenge.progress * 100}%` },
-                                    challenge.status === 'completed' ? styles.completedProgressBar : {}
-                                ]} 
-                            />
-                        </View>
-                    </View>
-                    
                     <View style={styles.detailsSection}>
                         <Text style={styles.sectionTitle}>Challenge Details</Text>
                         <Text style={styles.description}>{challenge.description}</Text>
@@ -277,15 +234,17 @@ export default function ChallengeDetailsScreen() {
                         </View>
                     </View>
                     
-                    <View style={styles.rulesSection}>
-                        <Text style={styles.sectionTitle}>Challenge Rules</Text>
-                        {challenge.rules.map((rule, index) => (
-                            <View key={index} style={styles.ruleItem}>
-                                <Ionicons name="checkmark-circle" size={20} color={OnboardingColors.accentColor} />
-                                <Text style={styles.ruleText}>{rule}</Text>
-                            </View>
-                        ))}
-                    </View>
+                    {challenge.rules && challenge.rules.length > 0 && (
+                        <View style={styles.rulesSection}>
+                            <Text style={styles.sectionTitle}>Challenge Rules</Text>
+                            {challenge.rules.map((rule: string, index: number) => (
+                                <View key={index} style={styles.ruleItem}>
+                                    <Ionicons name="checkmark-circle" size={20} color={OnboardingColors.accentColor} />
+                                    <Text style={styles.ruleText}>{rule}</Text>
+                                </View>
+                            ))}
+                        </View>
+                    )}
                     
                     <View style={styles.statsSection}>
                         <Text style={styles.sectionTitle}>Challenge Stats</Text>
@@ -299,30 +258,32 @@ export default function ChallengeDetailsScreen() {
                                 <Text style={styles.statLabel}>Prize Pool</Text>
                             </View>
                             <View style={styles.statItem}>
-                                <Text style={styles.statValue}>{challenge.creatorName}</Text>
+                                <Text style={styles.statValue}>{challenge.creatorName || "Community"}</Text>
                                 <Text style={styles.statLabel}>Creator</Text>
                             </View>
                         </View>
                     </View>
                     
-                    <View style={styles.trackingSection}>
-                        <Text style={styles.sectionTitle}>Tracking Metrics</Text>
-                        <View style={styles.metricsContainer}>
-                            {challenge.trackingMetrics.map((metric, index) => (
-                                <View key={index} style={styles.metricBadge}>
-                                    <Text style={styles.metricText}>{metric}</Text>
-                                </View>
-                            ))}
+                    {challenge.trackingMetrics && challenge.trackingMetrics.length > 0 && (
+                        <View style={styles.trackingSection}>
+                            <Text style={styles.sectionTitle}>Tracking Metrics</Text>
+                            <View style={styles.metricsContainer}>
+                                {challenge.trackingMetrics.map((metric: string, index: number) => (
+                                    <View key={index} style={styles.metricBadge}>
+                                        <Text style={styles.metricText}>{metric}</Text>
+                                    </View>
+                                ))}
+                            </View>
                         </View>
-                    </View>
+                    )}
                 </View>
             </ScrollView>
             
-            {challenge.status === 'active' && (
+            {challenge.status !== 'completed' && (
                 <View style={styles.actionContainer}>
                     <TouchableOpacity style={styles.actionButton}>
                         <Ionicons name="play-circle" size={24} color="#fff" style={styles.actionIcon} />
-                        <Text style={styles.actionButtonText}>Log Today's Activity</Text>
+                        <Text style={styles.actionButtonText}>Start</Text>
                     </TouchableOpacity>
                 </View>
             )}
@@ -440,33 +401,6 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: HomeColors.textSecondary,
         marginLeft: 5,
-    },
-    progressSection: {
-        marginBottom: 25,
-    },
-    progressHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 10,
-    },
-    progressPercentage: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        color: OnboardingColors.accentColor,
-    },
-    progressContainer: {
-        height: 8,
-        backgroundColor: '#333333',
-        borderRadius: 4,
-    },
-    progressBar: {
-        height: '100%',
-        backgroundColor: OnboardingColors.accentColor,
-        borderRadius: 4,
-    },
-    completedProgressBar: {
-        backgroundColor: '#4CAF50',
     },
     sectionTitle: {
         fontSize: 18,

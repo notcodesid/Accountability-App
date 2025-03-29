@@ -92,6 +92,8 @@ export interface APIChallenge {
   trackingMetrics: string[];
   createdAt: string;
   updatedAt: string;
+  progress?: number; // User's progress in the challenge (0.0 to 1.0)
+  status?: 'active' | 'completed';
 }
 
 export interface ChallengesResponse {
@@ -102,6 +104,15 @@ export interface ChallengesResponse {
 
 export const getChallenges = (): Promise<ChallengesResponse> => {
   return fetchFromAPI<ChallengesResponse>('/challenges');
+};
+
+export interface ChallengeResponse {
+  success: boolean;
+  data: APIChallenge;
+}
+
+export const getChallengeById = (id: string): Promise<ChallengeResponse> => {
+  return fetchFromAPI<ChallengeResponse>(`/challenges/${id}`);
 };
 
 // Authentication interfaces

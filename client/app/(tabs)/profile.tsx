@@ -38,7 +38,7 @@ export default function Profile() {
     };
 
     return (
-        <SafeScreenView style={styles.container} backgroundColor={HomeColors.background} scrollable={true}>
+        <SafeScreenView style={styles.container} backgroundColor={HomeColors.background} scrollable={false}>
             <StatusBar barStyle="light-content" />
             
 

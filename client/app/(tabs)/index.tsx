@@ -6,6 +6,7 @@ import SafeScreenView from '../../components/SafeScreenView';
 import { LinearGradient } from 'expo-linear-gradient';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import { getChallenges } from '../../services/api';
+import { useRouter } from 'expo-router';
 
 // Type definitions for our data structure
 interface Challenge {
@@ -28,6 +29,7 @@ export default function Home() {
   const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
     fetchChallenges();
@@ -211,9 +213,13 @@ export default function Home() {
 
       {selectedChallenge && (
         <View style={styles.startButtonContainer}>
-          <TouchableOpacity style={styles.startButton} activeOpacity={0.8}>
+          <TouchableOpacity 
+            style={styles.startButton} 
+            activeOpacity={0.8}
+            onPress={() => router.push(`/challenges/${selectedChallenge}`)}
+          >
             <Ionicons name="play-circle" size={24} color="#262626" style={styles.playIcon} />
-            <Text style={styles.startButtonText}>Start Workout</Text>
+            <Text style={styles.startButtonText}>Start</Text>
           </TouchableOpacity>
         </View>
       )}
