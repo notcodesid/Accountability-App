@@ -153,7 +153,7 @@ const ALL_CHALLENGES: Challenge[] = [
 ];
 
 export default function ChallengesScreen() {
-    const [activeTab, setActiveTab] = useState('all');
+    const [activeTab, setActiveTab] = useState('active');
     
     // Filter challenges based on active tab
     const filteredChallenges = () => {
@@ -163,8 +163,7 @@ export default function ChallengesScreen() {
             case 'completed':
                 return ALL_CHALLENGES.filter(challenge => challenge.status === 'completed');
             default:
-                // For 'all' tab, show active challenges that the user hasn't joined yet
-                return ALL_CHALLENGES.filter(challenge => challenge.status === 'active' && !challenge.joined);
+                return ALL_CHALLENGES.filter(challenge => challenge.status === 'active' && challenge.joined);
         }
     };
 
@@ -176,7 +175,7 @@ export default function ChallengesScreen() {
             case 'completed':
                 return { title: 'Completed Challenges', subtitle: 'View your past victories' };
             default:
-                return { title: 'Discover Challenges', subtitle: 'Find new challenges to join' };
+                return { title: 'My Challenges', subtitle: 'Track your ongoing challenges' };
         }
     };
 
@@ -276,12 +275,6 @@ export default function ChallengesScreen() {
             </View>
             
             <View style={styles.tabs}>
-                <TouchableOpacity 
-                    style={[styles.tab, activeTab === 'all' && styles.activeTab]} 
-                    onPress={() => setActiveTab('all')}
-                >
-                    <Text style={[styles.tabText, activeTab === 'all' && styles.activeTabText]}>Discover</Text>
-                </TouchableOpacity>
                 <TouchableOpacity 
                     style={[styles.tab, activeTab === 'active' && styles.activeTab]} 
                     onPress={() => setActiveTab('active')}
