@@ -1,5 +1,5 @@
 {
-  "name": "server",
+  "name": "accountability-server",
   "version": "1.0.0",
   "description": "This is the backend server for the Accountability App, a platform that allows users to create and participate in challenges with financial incentives.",
   "main": "dist/src/index.js",
@@ -8,6 +8,9 @@
     "build": "tsc",
     "start": "node dist/src/index.js",
     "dev": "ts-node src/index.ts"
+  },
+  "prisma": {
+    "seed": "ts-node prisma/seed.ts"
   },
   "keywords": [],
   "author": "",
