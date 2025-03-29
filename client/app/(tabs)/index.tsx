@@ -5,7 +5,7 @@ import { Colors, HomeColors, OnboardingColors } from '../../constants/Colors';
 import SafeScreenView from '../../components/SafeScreenView';
 import { LinearGradient } from 'expo-linear-gradient';
 import LoadingSpinner from '../../components/LoadingSpinner';
-import { getChallenges, APIChallenge } from '../../services/api';
+import { getChallenges } from '../../services/api';
 
 // Type definitions for our data structure
 interface Challenge {

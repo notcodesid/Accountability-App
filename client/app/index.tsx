@@ -12,14 +12,32 @@ import {
 import { OnboardingColors } from '../constants/Colors';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useAuth } from '../context/AuthContext';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 export default function WelcomeScreen() {
   const router = useRouter();
   const [imageError, setImageError] = useState(false);
+  const { isLoading, isLoggedIn } = useAuth();
   
   // Animation values
   const fadeAnim = new Animated.Value(0);
   const slideAnim = new Animated.Value(20);
+
+  useEffect(() => {
+    // Skip loading if we're already on the right screen
+    if (isLoading) return;
+
+    // Redirect based on auth status
+    if (isLoggedIn) {
+      router.replace('/(tabs)');
+    } else {
+      router.replace({
+        pathname: '/onboarding/email',
+        params: { signin: 'false' } // Default to signup
+      });
+    }
+  }, [isLoading, isLoggedIn]);
 
   useEffect(() => {
     // Start the animation when component mounts
@@ -108,8 +126,7 @@ export default function WelcomeScreen() {
           <TouchableOpacity 
             style={styles.buttonSecondary}
             onPress={() => router.push({
-              pathname: "/onboarding/email",
-              params: { signin: 'true' }
+              pathname: "/onboarding/signin"
             })}
           >
             <Text style={styles.buttonSecondaryText}>Sign In</Text>

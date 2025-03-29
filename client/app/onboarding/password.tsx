@@ -8,12 +8,16 @@ import {
   Keyboard, 
   TouchableWithoutFeedback,
   KeyboardAvoidingView,
-  Platform
+  Platform,
+  ActivityIndicator
 } from 'react-native';
 import { OnboardingColors } from '../../constants/Colors';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
+import { LinearGradient } from 'expo-linear-gradient';
+import ErrorAlert from '../../components/ErrorAlert';
+import { useAuth } from '../../context/AuthContext';
 
 export default function PasswordScreen() {
   const router = useRouter();
@@ -21,16 +25,52 @@ export default function PasswordScreen() {
   const email = params.email as string;
   const isSignIn = params.isSignIn === 'true';
 
+  const { signin } = useAuth();
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [showError, setShowError] = useState(false);
 
-  const handleCreateAccount = () => {
-    if (password.length < 8) return;
+  const handleCreateAccount = async () => {
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters');
+      setShowError(true);
+      return;
+    }
     
-    router.push({
-      pathname: isSignIn ? '/(tabs)' : '/onboarding/username',
-      params: { email, password },
-    });
+    if (isSignIn) {
+      // Handle sign in
+      setLoading(true);
+      try {
+        const success = await signin({
+          emailOrUsername: email,
+          password: password
+        });
+        
+        if (success) {
+          router.push('/(tabs)');
+        } else {
+          setError('Invalid email or password');
+          setShowError(true);
+        }
+      } catch (err) {
+        setError('An error occurred during sign in');
+        setShowError(true);
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      // For sign up flow, just continue to username screen
+      router.push({
+        pathname: '/onboarding/username',
+        params: { email, password },
+      });
+    }
+  };
+
+  const handleErrorClose = () => {
+    setShowError(false);
   };
 
   return (
@@ -40,6 +80,12 @@ export default function PasswordScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <StatusBar barStyle="light-content" />
+        
+        <ErrorAlert 
+          message={error || ''} 
+          visible={showError} 
+          onClose={handleErrorClose} 
+        />
         
         <View style={styles.header}>
           <TouchableOpacity 
@@ -51,7 +97,9 @@ export default function PasswordScreen() {
         </View>
         
         <View style={styles.content}>
-          <Text style={styles.title}>Set a password</Text>
+          <Text style={styles.title}>
+            {isSignIn ? 'Enter your password' : 'Set a password'}
+          </Text>
           
           <View style={styles.inputContainer}>
             <TextInput
@@ -82,15 +130,32 @@ export default function PasswordScreen() {
           <TouchableOpacity 
             style={[
               styles.continueButton, 
-              password.length < 8 ? styles.disabledButton : null
+              password.length < 8 || loading ? styles.disabledButton : null
             ]}
             onPress={handleCreateAccount}
-            disabled={password.length < 8}
+            disabled={password.length < 8 || loading}
           >
-            <Text style={styles.continueButtonText}>
-              {isSignIn ? 'Sign in' : 'Create account'}
-            </Text>
+            <LinearGradient
+              colors={[OnboardingColors.accentColor, OnboardingColors.accentSecondary]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.gradientButton}
+            >
+              {loading ? (
+                <ActivityIndicator color="#fff" size="small" />
+              ) : (
+                <Text style={styles.continueButtonText}>
+                  {isSignIn ? 'Sign in' : 'Continue'}
+                </Text>
+              )}
+            </LinearGradient>
           </TouchableOpacity>
+          
+          {isSignIn && (
+            <TouchableOpacity style={styles.forgotPasswordButton}>
+              <Text style={styles.forgotPasswordText}>Forgot password?</Text>
+            </TouchableOpacity>
+          )}
         </View>
       </KeyboardAvoidingView>
     </TouchableWithoutFeedback>
@@ -135,6 +200,8 @@ const styles = StyleSheet.create({
     padding: 15,
     height: 56,
     paddingRight: 50,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
   },
   eyeIcon: {
     position: 'absolute',
@@ -147,9 +214,18 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
   continueButton: {
-    backgroundColor: OnboardingColors.accentColor,
     borderRadius: 30,
     height: 56,
+    overflow: 'hidden',
+    shadowColor: OnboardingColors.accentColor,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  gradientButton: {
+    width: '100%',
+    height: '100%',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -160,5 +236,14 @@ const styles = StyleSheet.create({
     color: OnboardingColors.buttonText,
     fontSize: 16,
     fontWeight: '600',
+  },
+  forgotPasswordButton: {
+    alignSelf: 'center',
+    marginTop: 20,
+    padding: 10,
+  },
+  forgotPasswordText: {
+    color: OnboardingColors.accentColor,
+    fontSize: 14,
   },
 }); 

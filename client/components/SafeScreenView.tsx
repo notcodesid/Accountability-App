@@ -27,7 +27,7 @@ export default function SafeScreenView({
 
   const contentContainerStyle = {
     paddingTop: insets.top,
-    ...scrollViewProps.contentContainerStyle,
+    ...(scrollViewProps.contentContainerStyle as ViewStyle),
   };
 
   if (scrollable) {

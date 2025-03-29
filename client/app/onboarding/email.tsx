@@ -16,6 +16,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState, useEffect } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
+import ErrorAlert from '../../components/ErrorAlert';
 
 export default function EmailScreen() {
   const router = useRouter();
@@ -24,6 +25,8 @@ export default function EmailScreen() {
 
   const [email, setEmail] = useState('');
   const [isChecked, setIsChecked] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [showError, setShowError] = useState(false);
 
   // Animation values
   const fadeAnim = new Animated.Value(0);
@@ -45,13 +48,41 @@ export default function EmailScreen() {
     ]).start();
   }, []);
 
+  const validateEmail = (email: string) => {
+    const re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    return re.test(String(email).toLowerCase());
+  };
+
   const handleContinue = () => {
-    if (email.trim() === '') return;
+    if (email.trim() === '') {
+      setError('Please enter your email address');
+      setShowError(true);
+      return;
+    }
     
-    router.push({
-      pathname: '/onboarding/otp',
-      params: { email: email, isSignIn: isSignIn ? 'true' : 'false' }
-    });
+    if (!validateEmail(email)) {
+      setError('Please enter a valid email address');
+      setShowError(true);
+      return;
+    }
+    
+    // For sign in flow, we go directly to password screen, skipping OTP
+    if (isSignIn) {
+      router.push({
+        pathname: '/onboarding/password',
+        params: { email: email, isSignIn: 'true' }
+      });
+    } else {
+      // For sign up flow, we go to OTP verification
+      router.push({
+        pathname: '/onboarding/otp',
+        params: { email: email, isSignIn: 'false' }
+      });
+    }
+  };
+
+  const handleErrorClose = () => {
+    setShowError(false);
   };
 
   return (
@@ -61,6 +92,12 @@ export default function EmailScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <StatusBar barStyle="light-content" />
+        
+        <ErrorAlert 
+          message={error || ''} 
+          visible={showError} 
+          onClose={handleErrorClose} 
+        />
         
         <View style={styles.header}>
           <TouchableOpacity 
@@ -80,8 +117,13 @@ export default function EmailScreen() {
             }
           ]}
         >
-          <Text style={styles.title}>What's your email?</Text>
-          <Text style={styles.subtitle}>To start, create a new Accountability account.</Text>
+          <Text style={styles.title}>{isSignIn ? "Sign in" : "What's your email?"}</Text>
+          <Text style={styles.subtitle}>
+            {isSignIn 
+              ? "Enter your email to sign in"
+              : "To start, create a new Accountability account."
+            }
+          </Text>
           
           <View style={styles.inputContainer}>
             <TextInput

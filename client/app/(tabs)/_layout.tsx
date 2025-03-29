@@ -4,6 +4,7 @@ import { Colors, TabColors, OnboardingColors, HomeColors } from '../../constants
 import { StyleSheet, View, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import React from 'react';
+import AuthGuard from '../../components/AuthGuard';
 
 interface TabBarIconProps {
   name: React.ComponentProps<typeof Ionicons>['name'];
@@ -24,68 +25,70 @@ export default function TabLayout() {
   const bottomInset = insets.bottom > 0 ? insets.bottom : 10; // Min padding for non-notch phones
   
   return (
-    <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: TabColors.tabIconActive,
-        tabBarInactiveTintColor: TabColors.tabIconInactive,
-        tabBarStyle: { 
-          backgroundColor: TabColors.tabBarBackground,
-          borderTopWidth: 0,
-          height: 55 + bottomInset,
-          paddingBottom: bottomInset,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: -1 },
-          shadowOpacity: 0.25,
-          shadowRadius: 3,
-          elevation: 10,
-        },
-        tabBarItemStyle: {
-          paddingVertical: 5,
-        },
-        tabBarShowLabel: true,
-        tabBarLabelStyle: {
-          fontSize: 10,
-          fontWeight: '500',
-          marginTop: -3,
-        },
-        headerShown: false,
-      }}>
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Home',
-          tabBarIcon: ({ color, focused }) => <TabBarIcon name="home" color={color} focused={focused} />,
-        }}
-      />
-      <Tabs.Screen
-        name="challenges"
-        options={{
-          title: 'Challenges',
-          tabBarIcon: ({ color, focused }) => <TabBarIcon name="trophy" color={color} focused={focused} />,
-        }}
-      />
-      <Tabs.Screen
-        name="leaderboard"
-        options={{
-          title: 'Leaderboard',
-          tabBarIcon: ({ color, focused }) => <TabBarIcon name="podium" color={color} focused={focused} />,
-        }}
-      />
-      <Tabs.Screen
-        name="profile"
-        options={{
-          title: 'Profile',
-          tabBarIcon: ({ color, focused }) => <TabBarIcon name="person" color={color} focused={focused} />,
-        }}
-      />
-      <Tabs.Screen
-        name="wallet"
-        options={{
-          title: 'Wallet',
-          tabBarIcon: ({ color, focused }) => <TabBarIcon name="wallet" color={color} focused={focused} />,
-        }}
-      />
-    </Tabs>
+    <AuthGuard>
+      <Tabs
+        screenOptions={{
+          tabBarActiveTintColor: TabColors.tabIconActive,
+          tabBarInactiveTintColor: TabColors.tabIconInactive,
+          tabBarStyle: { 
+            backgroundColor: TabColors.tabBarBackground,
+            borderTopWidth: 0,
+            height: 55 + bottomInset,
+            paddingBottom: bottomInset,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: -1 },
+            shadowOpacity: 0.25,
+            shadowRadius: 3,
+            elevation: 10,
+          },
+          tabBarItemStyle: {
+            paddingVertical: 5,
+          },
+          tabBarShowLabel: true,
+          tabBarLabelStyle: {
+            fontSize: 10,
+            fontWeight: '500',
+            marginTop: -3,
+          },
+          headerShown: false,
+        }}>
+        <Tabs.Screen
+          name="index"
+          options={{
+            title: 'Home',
+            tabBarIcon: ({ color, focused }) => <TabBarIcon name="home" color={color} focused={focused} />,
+          }}
+        />
+        <Tabs.Screen
+          name="challenges"
+          options={{
+            title: 'Challenges',
+            tabBarIcon: ({ color, focused }) => <TabBarIcon name="trophy" color={color} focused={focused} />,
+          }}
+        />
+        <Tabs.Screen
+          name="leaderboard"
+          options={{
+            title: 'Leaderboard',
+            tabBarIcon: ({ color, focused }) => <TabBarIcon name="podium" color={color} focused={focused} />,
+          }}
+        />
+        <Tabs.Screen
+          name="profile"
+          options={{
+            title: 'Profile',
+            tabBarIcon: ({ color, focused }) => <TabBarIcon name="person" color={color} focused={focused} />,
+          }}
+        />
+        <Tabs.Screen
+          name="wallet"
+          options={{
+            title: 'Wallet',
+            tabBarIcon: ({ color, focused }) => <TabBarIcon name="wallet" color={color} focused={focused} />,
+          }}
+        />
+      </Tabs>
+    </AuthGuard>
   );
 }
 

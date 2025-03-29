@@ -1,12 +1,44 @@
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Image, StatusBar } from "react-native";
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Image, StatusBar, Alert } from "react-native";
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, HomeColors, OnboardingColors } from '../../constants/Colors';
 import SafeScreenView from '../../components/SafeScreenView';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useAuth } from '../../context/AuthContext';
+import { useState } from 'react';
 
 export default function Profile() {
+    const { user, logout } = useAuth();
+    const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+    const handleLogout = async () => {
+        Alert.alert(
+            "Log Out",
+            "Are you sure you want to log out?",
+            [
+                {
+                    text: "Cancel",
+                    style: "cancel"
+                },
+                {
+                    text: "Log Out",
+                    style: "destructive",
+                    onPress: async () => {
+                        setIsLoggingOut(true);
+                        try {
+                            await logout();
+                        } catch (error) {
+                            Alert.alert("Error", "Failed to log out. Please try again.");
+                        } finally {
+                            setIsLoggingOut(false);
+                        }
+                    }
+                }
+            ]
+        );
+    };
+
     return (
-        <SafeScreenView style={styles.container} backgroundColor={HomeColors.background} scrollable={false}>
+        <SafeScreenView style={styles.container} backgroundColor={HomeColors.background} scrollable={true}>
             <StatusBar barStyle="light-content" />
             
 
@@ -15,8 +47,8 @@ export default function Profile() {
                     source={{ uri: 'https://pbs.twimg.com/profile_images/1900043039831449603/EzgPL3sp_400x400.jpg' }} 
                     style={styles.profileImage} 
                 />
-                <Text style={styles.profileName}>Siddharth </Text>
-                <Text style={styles.profileBio}>20, engineer.
+                <Text style={styles.profileName}>{user?.username || "User"}</Text>
+                <Text style={styles.profileBio}>{user?.email || ""}
                 </Text>
                 
                 <View style={styles.statsContainer}>
@@ -123,9 +155,13 @@ export default function Profile() {
                     <Ionicons name="chevron-forward" size={18} color={HomeColors.textSecondary} />
                 </TouchableOpacity>
                 
-                <TouchableOpacity style={styles.logoutButton}>
+                <TouchableOpacity 
+                    style={styles.logoutButton}
+                    onPress={handleLogout}
+                    disabled={isLoggingOut}
+                >
                     <Ionicons name="log-out-outline" size={20} color={OnboardingColors.accentColor} />
-                    <Text style={styles.logoutText}>Log Out</Text>
+                    <Text style={styles.logoutText}>{isLoggingOut ? "Logging Out..." : "Log Out"}</Text>
                 </TouchableOpacity>
             </View>
         </SafeScreenView>

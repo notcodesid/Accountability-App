@@ -8,12 +8,16 @@ import {
   Keyboard, 
   TouchableWithoutFeedback,
   KeyboardAvoidingView,
-  Platform
+  Platform,
+  ActivityIndicator
 } from 'react-native';
 import { OnboardingColors } from '../../constants/Colors';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
+import { LinearGradient } from 'expo-linear-gradient';
+import ErrorAlert from '../../components/ErrorAlert';
+import { useAuth } from '../../context/AuthContext';
 
 export default function UsernameScreen() {
   const router = useRouter();
@@ -21,18 +25,48 @@ export default function UsernameScreen() {
   const email = params.email as string;
   const password = params.password as string;
 
+  const { signup } = useAuth();
   const [username, setUsername] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [showError, setShowError] = useState(false);
 
   const isValidUsername = () => {
     return username.length >= 3 && username.length <= 15 && /^[a-zA-Z0-9]+$/.test(username);
   };
 
-  const handleContinue = () => {
-    if (!isValidUsername()) return;
+  const handleContinue = async () => {
+    if (!isValidUsername()) {
+      setError('Username must be 3-15 characters with no special characters');
+      setShowError(true);
+      return;
+    }
     
-    // In a real app, we would submit the registration information to an API
-    // For this demo, we'll just navigate to the main app
-    router.push('/(tabs)');
+    setLoading(true);
+    
+    try {
+      const success = await signup({
+        email,
+        password,
+        username
+      });
+      
+      if (success) {
+        router.push('/(tabs)');
+      } else {
+        setError('Account creation failed. Please try again.');
+        setShowError(true);
+      }
+    } catch (err) {
+      setError('An error occurred during signup. Please try again.');
+      setShowError(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleErrorClose = () => {
+    setShowError(false);
   };
 
   return (
@@ -42,6 +76,12 @@ export default function UsernameScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <StatusBar barStyle="light-content" />
+        
+        <ErrorAlert 
+          message={error || ''} 
+          visible={showError} 
+          onClose={handleErrorClose} 
+        />
         
         <View style={styles.header}>
           <TouchableOpacity 
@@ -75,12 +115,23 @@ export default function UsernameScreen() {
           <TouchableOpacity 
             style={[
               styles.continueButton, 
-              !isValidUsername() ? styles.disabledButton : null
+              !isValidUsername() || loading ? styles.disabledButton : null
             ]}
             onPress={handleContinue}
-            disabled={!isValidUsername()}
+            disabled={!isValidUsername() || loading}
           >
-            <Text style={styles.continueButtonText}>Continue</Text>
+            <LinearGradient
+              colors={[OnboardingColors.accentColor, OnboardingColors.accentSecondary]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.gradientButton}
+            >
+              {loading ? (
+                <ActivityIndicator color="#fff" size="small" />
+              ) : (
+                <Text style={styles.continueButtonText}>Create Account</Text>
+              )}
+            </LinearGradient>
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
@@ -129,6 +180,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
     padding: 15,
     height: 56,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
   },
   usernameRequirement: {
     color: OnboardingColors.textSecondary,
@@ -136,9 +189,18 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
   continueButton: {
-    backgroundColor: OnboardingColors.accentColor,
     borderRadius: 30,
     height: 56,
+    overflow: 'hidden',
+    shadowColor: OnboardingColors.accentColor,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  gradientButton: {
+    width: '100%',
+    height: '100%',
     justifyContent: 'center',
     alignItems: 'center',
   },
