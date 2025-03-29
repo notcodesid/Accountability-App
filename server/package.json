@@ -1,35 +1,27 @@
 {
   "name": "server",
   "version": "1.0.0",
-  "main": "dist/index.js",
-  "type": "module",
+  "description": "This is the backend server for the Accountability App, a platform that allows users to create and participate in challenges with financial incentives.",
+  "main": "dist/src/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc",
-    "start": "node dist/index.js",
-    "dev": "ts-node --esm src/index.ts"
+    "start": "node dist/src/index.js",
+    "dev": "ts-node src/index.ts"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "",
   "dependencies": {
     "@prisma/client": "^6.5.0",
-    "axios": "^1.8.4",
-    "bcrypt": "^5.1.1",
     "cors": "^2.8.5",
-    "dotenv": "^16.4.7",
-    "express": "^4.21.2",
-    "firebase-admin": "^13.2.0",
-    "jsonwebtoken": "^9.0.2",
-    "prisma": "^6.5.0"
+    "express": "^4.21.2"
   },
   "devDependencies": {
-    "@types/bcrypt": "^5.0.2",
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.1",
-    "@types/jsonwebtoken": "^9.0.9",
-    "@types/node": "^20.11.27",
+    "@types/node": "^22.13.14",
+    "prisma": "^6.5.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.2"
   }

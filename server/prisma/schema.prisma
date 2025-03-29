@@ -14,71 +14,36 @@ datasource db {
 }
 
 model User {
-  id            String         @id @default(uuid())
-  email         String         @unique
-  name          String
-  password      String?        // Password for email/password auth
-  emailVerified Boolean        @default(false) // Whether email is verified
-  firebaseUid   String?        @unique // Firebase User ID for authentication
-  profilePic    String?
-  walletAddress String?        // Solana wallet address
-  createdAt     DateTime       @default(now())
-  challenges    Challenge[]    // Challenges created by this user
-  participations Participation[]
+  id String @id @default(uuid())
+  email String @unique
+  password String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Challenge {
-  id             String          @id @default(uuid())
-  title          String
-  description    String
-  startDate      DateTime
-  endDate        DateTime
-  goalType       GoalType
-  goalTarget     Int             // e.g., 5000 steps per day
-  entryFee       Float           // Amount in USD to join (will be converted to SOL)
-  creatorId      String
-  creator        User            @relation(fields: [creatorId], references: [id])
-  isPublic       Boolean         @default(true)
-  participants   Participation[]
-  createdAt      DateTime        @default(now())
+    id               Int      @id @default(autoincrement())  
+  title            String
+  description      String
+  type            String   // Fitness, Health, etc.
+  difficulty      ChallengeDifficulty
+  image           String   // URL of the challenge image
+  startDate       DateTime
+  endDate         DateTime
+  duration        String   // "30 days", etc.
+  userStake       Int      // In cents (e.g., 3000 = $30.00)
+  totalPrizePool  Int      // In cents (e.g., 45000 = $450.00)
+  participantCount Int
+  rules           String[] // Array of rules
+  metrics         String
+  trackingMetrics String[]
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }
 
-model Participation {
-  id          String             @id @default(uuid())
-  userId      String
-  user        User               @relation(fields: [userId], references: [id])
-  challengeId String
-  challenge   Challenge          @relation(fields: [challengeId], references: [id])
-  hasPaid     Boolean            @default(false)
-  hasCompleted Boolean?          // Null until challenge ends
-  progress    ProgressRecord[]
-  createdAt   DateTime           @default(now())
-
-  @@unique([userId, challengeId])
-}
-
-model ProgressRecord {
-  id              String         @id @default(uuid())
-  participationId String
-  participation   Participation  @relation(fields: [participationId], references: [id])
-  date            DateTime
-  value           Int            // The recorded value (e.g., steps)
-  source          DataSource     // Where the data came from
-  createdAt       DateTime       @default(now())
-
-  @@unique([participationId, date])
-}
-
-enum GoalType {
-  STEPS
-  WORKOUTS
-  MEDITATION
-  CUSTOM
-}
-
-enum DataSource {
-  GOOGLE_FIT
-  APPLE_HEALTH
-  FITBIT
-  MANUAL
+enum ChallengeDifficulty {
+  EASY
+  MODERATE
+  HARD
 }

@@ -214,7 +214,7 @@ export default function Wallet() {
                         </View>
                     </View>
                 </View>
-            </View>
+        </View>
         </SafeScreenView>
     );
 }
