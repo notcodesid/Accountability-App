@@ -1,12 +1,14 @@
-import React, { useState } from 'react';
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, FlatList, StatusBar, ImageBackground } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, FlatList, StatusBar, ImageBackground, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, HomeColors, OnboardingColors } from '../../constants/Colors';
 import { router } from 'expo-router';
 import SafeScreenView from '../../components/SafeScreenView';
 import { LinearGradient } from 'expo-linear-gradient';
+import LoadingSpinner from '../../components/LoadingSpinner';
+import { getChallenges, APIChallenge } from '../../services/api';
 
-// Define interface for challenge data
+// Define interface for challenge data as displayed in the UI
 interface Challenge {
     id: string;
     title: string;
@@ -20,150 +22,76 @@ interface Challenge {
     joined?: boolean;
     image?: string;
     metrics?: string;
+    description?: string;
+    rules?: string[];
 }
-
-// Sample data for challenges
-const ALL_CHALLENGES: Challenge[] = [
-    {
-        id: '1',
-        title: '10K Steps Daily',
-        type: 'Steps',
-        duration: '30 days',
-        progress: 0.75,
-        participants: 156,
-        contribution: '$50',
-        prizePool: '$7,800',
-        status: 'active',
-        joined: true,
-        image: 'https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?auto=format&fit=crop&w=1000',
-        metrics: '10,000 steps daily'
-    },
-    {
-        id: '2',
-        title: '5K Pace Challenge',
-        type: 'Running',
-        duration: '21 days',
-        progress: 0.45,
-        participants: 89,
-        contribution: '$75',
-        prizePool: '$6,675',
-        status: 'active',
-        joined: true,
-        image: 'https://images.unsplash.com/photo-1571008887538-b36bb32f4571?auto=format&fit=crop&w=1000',
-        metrics: '5 km • 3x week'
-    },
-    {
-        id: '3',
-        title: 'Active Minutes',
-        type: 'Activity',
-        duration: '14 days',
-        progress: 0.3,
-        participants: 124,
-        contribution: '$25',
-        prizePool: '$3,100',
-        status: 'active',
-        joined: true,
-        image: 'https://images.unsplash.com/photo-1470299067034-07c696e9ef07?auto=format&fit=crop&w=1000',
-        metrics: '60 min • daily'
-    },
-    {
-        id: '4',
-        title: 'Morning Meditation',
-        type: 'Wellness',
-        duration: '60 days',
-        progress: 1.0,
-        participants: 208,
-        contribution: '$30',
-        prizePool: '$6,240',
-        status: 'completed',
-        joined: true,
-        image: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&w=1000',
-        metrics: '10 min • morning'
-    },
-    {
-        id: '5',
-        title: 'Water Intake Challenge',
-        type: 'Health',
-        duration: '14 days',
-        progress: 1.0,
-        participants: 143,
-        contribution: '$20',
-        prizePool: '$2,860',
-        status: 'completed',
-        joined: true,
-        image: 'https://images.unsplash.com/photo-1523362628745-0c100150b504?auto=format&fit=crop&w=1000',
-        metrics: '2L water • daily'
-    },
-    {
-        id: '6',
-        title: 'Book Reading Marathon',
-        type: 'Education',
-        duration: '30 days',
-        progress: 1.0,
-        participants: 95,
-        contribution: '$40',
-        prizePool: '$3,800',
-        status: 'completed',
-        joined: true,
-        image: 'https://images.unsplash.com/photo-1519682337058-a94d519337bc?auto=format&fit=crop&w=1000',
-        metrics: '30 min • daily'
-    },
-    {
-        id: '7',
-        title: 'Plank Challenge',
-        type: 'Fitness',
-        duration: '30 days',
-        progress: 0.15,
-        participants: 67,
-        contribution: '$35',
-        prizePool: '$2,345',
-        status: 'active',
-        joined: false,
-        image: 'https://images.unsplash.com/photo-1574680178050-55c6a6a96e0a?auto=format&fit=crop&w=1000',
-        metrics: 'increasing daily'
-    },
-    {
-        id: '8',
-        title: 'Healthy Meal Prep',
-        type: 'Nutrition',
-        duration: '21 days',
-        progress: 0,
-        participants: 112,
-        contribution: '$30',
-        prizePool: '$3,360',
-        status: 'active',
-        joined: false,
-        image: 'https://images.unsplash.com/photo-1543362906-acfc16c67564?auto=format&fit=crop&w=1000',
-        metrics: '1 meal • daily'
-    },
-    {
-        id: '9',
-        title: 'Sleep Tracking',
-        type: 'Wellness',
-        duration: '14 days',
-        progress: 0,
-        participants: 85,
-        contribution: '$25',
-        prizePool: '$2,125',
-        status: 'active',
-        joined: false,
-        image: 'https://images.unsplash.com/photo-1511493485273-992e6069a8d7?auto=format&fit=crop&w=1000',
-        metrics: '7+ hours • nightly'
-    }
-];
 
 export default function ChallengesScreen() {
     const [activeTab, setActiveTab] = useState('active');
+    const [challenges, setChallenges] = useState<Challenge[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    
+    useEffect(() => {
+        fetchChallenges();
+    }, []);
+    
+    const fetchChallenges = async () => {
+        try {
+            setLoading(true);
+            setError(null);
+            
+            const response = await getChallenges();
+            
+            if (response.success) {
+                // Transform API data to match our UI format
+                const transformedChallenges = response.data.map(apiChallenge => transformApiChallenge(apiChallenge));
+                setChallenges(transformedChallenges);
+            } else {
+                setError('Failed to fetch challenges');
+            }
+        } catch (err) {
+            console.error('Error fetching challenges:', err);
+            setError('An error occurred while fetching challenges');
+        } finally {
+            setLoading(false);
+        }
+    };
+    
+    // Transform API challenge data to UI challenge format
+    const transformApiChallenge = (apiChallenge: APIChallenge): Challenge => {
+        // Set a random progress value for demonstration
+        // In a real app, you would get the user's actual progress from the API
+        const randomProgress = Math.random();
+        const isCompleted = randomProgress >= 1.0;
+        
+        return {
+            id: apiChallenge.id.toString(),
+            title: apiChallenge.title,
+            type: apiChallenge.type,
+            duration: apiChallenge.duration,
+            progress: isCompleted ? 1.0 : randomProgress,
+            participants: apiChallenge.participantCount,
+            contribution: `$${(apiChallenge.userStake / 100).toFixed(0)}`,
+            prizePool: `$${(apiChallenge.totalPrizePool / 100).toFixed(0)}`,
+            status: isCompleted ? 'completed' : 'active',
+            joined: true, // Assume all challenges from API are joined
+            image: apiChallenge.image,
+            metrics: apiChallenge.metrics,
+            description: apiChallenge.description,
+            rules: apiChallenge.rules
+        };
+    };
     
     // Filter challenges based on active tab
     const filteredChallenges = () => {
         switch(activeTab) {
             case 'active':
-                return ALL_CHALLENGES.filter(challenge => challenge.status === 'active' && challenge.joined);
+                return challenges.filter(challenge => challenge.status === 'active' && challenge.joined);
             case 'completed':
-                return ALL_CHALLENGES.filter(challenge => challenge.status === 'completed');
+                return challenges.filter(challenge => challenge.status === 'completed');
             default:
-                return ALL_CHALLENGES.filter(challenge => challenge.status === 'active' && challenge.joined);
+                return challenges.filter(challenge => challenge.status === 'active' && challenge.joined);
         }
     };
 
@@ -255,6 +183,35 @@ export default function ChallengesScreen() {
             </View>
         </TouchableOpacity>
     );
+    
+    // Render error state
+    if (error) {
+        return (
+            <SafeScreenView style={styles.container} backgroundColor={HomeColors.background}>
+                <StatusBar barStyle="light-content" />
+                <View style={styles.errorContainer}>
+                    <Ionicons name="alert-circle-outline" size={60} color={HomeColors.textSecondary} />
+                    <Text style={styles.errorText}>{error}</Text>
+                    <TouchableOpacity 
+                        style={styles.retryButton} 
+                        onPress={fetchChallenges}
+                    >
+                        <Text style={styles.retryButtonText}>Retry</Text>
+                    </TouchableOpacity>
+                </View>
+            </SafeScreenView>
+        );
+    }
+    
+    // Render loading state
+    if (loading) {
+        return (
+            <SafeScreenView style={styles.container} backgroundColor={HomeColors.background}>
+                <StatusBar barStyle="light-content" />
+                <LoadingSpinner message="Loading challenges..." />
+            </SafeScreenView>
+        );
+    }
 
     return (
         <SafeScreenView style={styles.container} backgroundColor={HomeColors.background} scrollable={false}>
@@ -300,6 +257,8 @@ export default function ChallengesScreen() {
                         <Text style={styles.emptyText}>No challenges found</Text>
                     </View>
                 }
+                onRefresh={fetchChallenges}
+                refreshing={loading}
             />
         </SafeScreenView>
     );
@@ -475,5 +434,29 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: HomeColors.textSecondary,
         marginTop: 10,
+    },
+    errorContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 20,
+    },
+    errorText: {
+        fontSize: 18,
+        color: HomeColors.text,
+        marginTop: 10,
+        marginBottom: 20,
+        textAlign: 'center',
+    },
+    retryButton: {
+        backgroundColor: OnboardingColors.accentColor,
+        paddingVertical: 12,
+        paddingHorizontal: 24,
+        borderRadius: 8,
+    },
+    retryButtonText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: '600',
     },
 });

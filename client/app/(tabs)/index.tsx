@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, Image, TouchableOpacity, ImageBackground, FlatList, ListRenderItem, StatusBar } from "react-native";
 import { Ionicons } from '@expo/vector-icons';
-import { Colors, HomeColors } from '../../constants/Colors';
+import { Colors, HomeColors, OnboardingColors } from '../../constants/Colors';
 import SafeScreenView from '../../components/SafeScreenView';
 import { LinearGradient } from 'expo-linear-gradient';
+import LoadingSpinner from '../../components/LoadingSpinner';
+import { getChallenges, APIChallenge } from '../../services/api';
 
 // Type definitions for our data structure
 interface Challenge {
@@ -15,74 +17,56 @@ interface Challenge {
   difficulty: string;
   contributionAmount: string;
   prizeAmount: string;
-  type: 'walk' | 'run' | 'fitness';
-  metrics?: string; // e.g., "3x • 40s" as shown in the reference image
-  details?: string[]; // Additional challenge details like "Upper Body • Build strength • Beginner"
-  trackingMetrics?: string[]; // The metrics that will be tracked for this challenge
+  type: string; 
+  metrics?: string;
+  details?: string[];
+  trackingMetrics?: string[];
 }
-
-// Sample data for challenges
-const challenges: Challenge[] = [
-  {
-    id: '1',
-    title: '10K Steps Daily',
-    image: 'https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?auto=format&fit=crop&w=1000',
-    duration: '30 days',
-    participants: 156,
-    difficulty: 'Moderate',
-    contributionAmount: '$50',
-    prizeAmount: '$7,800',
-    type: 'walk',
-    metrics: '10,000 steps daily',
-    details: ['Step Tracking', 'Distance Covered', 'Calories Burned'],
-    trackingMetrics: ['Steps Count', 'Distance Covered', 'Calories Burned']
-  },
-  {
-    id: '2',
-    title: '5K Pace Challenge',
-    image: 'https://images.unsplash.com/photo-1571008887538-b36bb32f4571?auto=format&fit=crop&w=1000',
-    duration: '21 days',
-    participants: 89,
-    difficulty: 'Advanced',
-    contributionAmount: '$75',
-    prizeAmount: '$6,675',
-    type: 'run',
-    metrics: '5 km • 3x week',
-    details: ['Run Tracking', 'Pace Improvement', 'GPS Tracking'],
-    trackingMetrics: ['Distance Covered', 'Speed & Pace', 'Workout Tracking']
-  },
-  {
-    id: '3',
-    title: 'Active Minutes',
-    image: 'https://images.unsplash.com/photo-1470299067034-07c696e9ef07?auto=format&fit=crop&w=1000',
-    duration: '14 days',
-    participants: 124,
-    difficulty: 'Beginner',
-    contributionAmount: '$25',
-    prizeAmount: '$3,100',
-    type: 'fitness',
-    metrics: '60 min • daily',
-    details: ['Activity Tracking', 'Any Movement', 'Beginner Friendly'],
-    trackingMetrics: ['Move Minutes', 'Calories Burned']
-  },
-  {
-    id: '4',
-    title: 'Calorie Burner',
-    image: 'https://images.unsplash.com/photo-1517963879433-6ad2b056d712?auto=format&fit=crop&w=1000',
-    duration: '28 days',
-    participants: 67,
-    difficulty: 'Moderate',
-    contributionAmount: '$60',
-    prizeAmount: '$4,020',
-    type: 'fitness',
-    metrics: '400 cal • daily',
-    details: ['Calorie Tracking', 'Any Activity', 'Multiple Workouts'],
-    trackingMetrics: ['Calories Burned', 'Workout Tracking', 'Move Minutes']
-  }
-];
 
 export default function Home() {
   const [selectedChallenge, setSelectedChallenge] = useState<string | null>(null);
+  const [challenges, setChallenges] = useState<Challenge[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
+  useEffect(() => {
+    fetchChallenges();
+  }, []);
+  
+  const fetchChallenges = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const response = await getChallenges();
+      
+      if (response.success) {
+        // Transform API data to match our UI format
+        const transformedChallenges = response.data.map(apiChallenge => ({
+          id: apiChallenge.id.toString(),
+          title: apiChallenge.title,
+          image: apiChallenge.image,
+          duration: apiChallenge.duration,
+          participants: apiChallenge.participantCount,
+          difficulty: apiChallenge.difficulty,
+          contributionAmount: `$${(apiChallenge.userStake / 100).toFixed(0)}`,
+          prizeAmount: `$${(apiChallenge.totalPrizePool / 100).toFixed(0)}`,
+          type: apiChallenge.type.toLowerCase(),
+          metrics: apiChallenge.metrics,
+          details: [apiChallenge.type, apiChallenge.description?.split('.')[0] || '', apiChallenge.difficulty],
+          trackingMetrics: apiChallenge.trackingMetrics
+        }));
+        setChallenges(transformedChallenges);
+      } else {
+        setError('Failed to fetch challenges');
+      }
+    } catch (err) {
+      console.error('Error fetching challenges:', err);
+      setError('An error occurred while fetching challenges');
+    } finally {
+      setLoading(false);
+    }
+  };
   
   const selectedChallengeData = selectedChallenge 
     ? challenges.find(c => c.id === selectedChallenge) 
@@ -142,6 +126,35 @@ export default function Home() {
     </TouchableOpacity>
   );
 
+  // Render error state
+  if (error) {
+    return (
+      <SafeScreenView style={styles.container} backgroundColor={HomeColors.background}>
+        <StatusBar barStyle="light-content" />
+        <View style={styles.errorContainer}>
+          <Ionicons name="alert-circle-outline" size={60} color={HomeColors.textSecondary} />
+          <Text style={styles.errorText}>{error}</Text>
+          <TouchableOpacity 
+            style={styles.retryButton} 
+            onPress={fetchChallenges}
+          >
+            <Text style={styles.retryButtonText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeScreenView>
+    );
+  }
+  
+  // Render loading state
+  if (loading) {
+    return (
+      <SafeScreenView style={styles.container} backgroundColor={HomeColors.background}>
+        <StatusBar barStyle="light-content" />
+        <LoadingSpinner message="Loading challenges..." />
+      </SafeScreenView>
+    );
+  }
+
   return (
     <SafeScreenView style={styles.container} backgroundColor={HomeColors.background} scrollable={false}>
       <StatusBar barStyle="light-content" />
@@ -190,6 +203,8 @@ export default function Home() {
         ]}
         showsVerticalScrollIndicator={false}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
+        onRefresh={fetchChallenges}
+        refreshing={loading}
       />
       
       {selectedChallenge && (
@@ -330,5 +345,29 @@ const styles = StyleSheet.create({
     color: '#262626',
     fontSize: 18,
     fontWeight: 'bold',
-  }
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  errorText: {
+    fontSize: 18,
+    color: HomeColors.text,
+    marginTop: 10,
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  retryButton: {
+    backgroundColor: OnboardingColors.accentColor,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
 });

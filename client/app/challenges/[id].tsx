@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Image, StatusBar } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors, HomeColors, OnboardingColors } from '../../constants/Colors';
+import {  HomeColors, OnboardingColors } from '../../constants/Colors';
 import { useLocalSearchParams, router } from 'expo-router';
 import SafeScreenView from '../../components/SafeScreenView';
 import { LinearGradient } from 'expo-linear-gradient';

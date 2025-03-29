@@ -7,7 +7,6 @@ import {
   StatusBar,
   Dimensions,
   ImageBackground,
-  Image,
   Animated
 } from 'react-native';
 import { OnboardingColors } from '../constants/Colors';
