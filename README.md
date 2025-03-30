@@ -2,25 +2,57 @@
 
 A platform that allows users to create and participate in challenges with financial incentives to help them stay accountable to their goals. Users can join challenges, track their progress, and earn rewards for successful completion.
 
+## Features
+
+- **Financial Stakes**: Users join challenges by contributing to a prize pool
+- **Challenge Management**: Create and participate in various challenge types
+- **Progress Tracking**: Monitor your advancement through challenges
+- **Wallet System**: Integrated financial transactions for challenge stakes
+- **Leaderboards**: See how you rank against other participants
+- **Social Accountability**: Community-driven goal achievement
+
+## Tech Stack
+
+### Backend
+- **Framework**: Node.js + Express
+- **Language**: TypeScript
+- **Database**: PostgreSQL with Prisma ORM
+- **Authentication**: JWT token-based auth
+
+### Frontend
+- **Framework**: React Native with Expo
+- **Navigation**: Expo Router
+- **Styling**: React Native StyleSheet
+- **Authentication**: Context API with JWT tokens
+
 ## Project Structure
 
 The application consists of two main parts:
 
-1. **Server**: Node.js/Express backend with TypeScript and PostgreSQL database
-2. **Client**: React Native mobile app with Expo and Firebase Authentication
-
-## Authentication Flow
-
-This application uses Firebase Authentication for user management:
-
-1. Users sign in with Google through Firebase in the React Native app
-2. After successful authentication, the app receives a Firebase ID token
-3. The app sends this token to the backend server
-4. The server verifies the token using Firebase Admin SDK
-5. The server finds or creates a user record in the database
-6. User is now authenticated and can access protected resources
+```
+/
+├── server/         # Node.js/Express backend
+│   ├── src/          # TypeScript source code
+│   ├── prisma/       # Database schema and migrations
+│   └── ...
+│
+└── client/         # React Native mobile app
+    ├── app/          # Expo Router screens
+    ├── components/   # Reusable UI components 
+    ├── constants/    # App constants and configuration
+    ├── context/      # React Context providers
+    ├── services/     # API and data services
+    └── ...
+```
 
 ## Getting Started
+
+### Prerequisites
+
+- Node.js v16+
+- npm or yarn
+- PostgreSQL database
+- iOS Simulator or Android Emulator (for mobile development)
 
 ### Server Setup
 
@@ -34,28 +66,18 @@ cd server
 npm install
 ```
 
-3. Set up environment variables:
-Create a `.env` file in the server directory with:
-```
-DATABASE_URL="your-postgresql-connection-string"
-PORT=3000
-GOOGLE_APPLICATION_CREDENTIALS="/path/to/your/firebase-service-account.json"
-```
-
-4. Generate Prisma client:
-```bash
-npx prisma generate
-```
-
-5. Run database migrations:
+3. Set up your database:
 ```bash
 npx prisma migrate dev
+npx prisma db seed
 ```
 
-6. Start the server:
+4. Start the development server:
 ```bash
-npm start
+npm run dev
 ```
+
+The server will start at `http://localhost:5000`.
 
 ### Client Setup
 
@@ -69,67 +91,103 @@ cd client
 npm install
 ```
 
-3. Configure Firebase:
-   - Create a Firebase project and enable Google Authentication
-   - Update Firebase config in `src/config/firebase.ts`
-   - Configure Google Auth client IDs in `src/services/auth.ts`
-
-4. Start the Expo development server:
+3. Start the Expo development server:
 ```bash
 npm start
 ```
 
-## Development
+4. Follow the instructions in the terminal to run on iOS simulator or Android device/emulator.
 
-### Server Development
+## Platform-Specific Setup
 
-- Use TypeScript for type safety
-- Follow RESTful API design principles
-- Use Prisma for database operations
-- Firebase Admin SDK for token verification
+### iOS
+The app should work out of the box with iOS simulators or physical devices. Press `i` after starting the development server to open in an iOS simulator.
 
-### Client Development
+### Android
 
-- React Native with Expo for cross-platform mobile development
-- Firebase Authentication for user management
-- Expo Auth Session for Google Sign-In
-- React Navigation for app navigation
+When running on Android devices or emulators, you need to ensure your app can connect to your development server:
 
-## Features
+1. **Quick Setup** - Run our automatic IP configuration script:
+   ```bash
+   cd client/scripts
+   ./set-ip.sh
+   ```
+   
+   The script will:
+   - Detect your computer's IP address
+   - Update the Environment.ts file automatically
+   - Create a backup of your original config
+   
+2. Restart your development server:
+   ```bash
+   npm start
+   ```
 
-- Goal-Based Financial Pooling: Users join challenges by contributing a fixed amount
-- Automated Progress Tracking: Integration with Google Fit, Apple Health, and Fitbit
-- Financial Incentive & Reward Distribution: Successful participants get rewards
-- Gamification & Community Engagement: Leaderboards and progress tracking
+3. Make sure your Android device is on the same WiFi network as your development computer.
 
-## Technologies
+4. Scan the QR code with the Expo Go app or press `a` to open in an Android emulator.
 
-- **Backend**: Node.js, Express, TypeScript, Prisma ORM
-- **Database**: PostgreSQL
-- **Blockchain**: Solana (for secure financial transactions)
-- **Frontend**: (To be implemented, likely React Native)
+## Troubleshooting Android Issues
+
+If you're seeing a black screen or connection errors:
+
+1. **Network Issues**:
+   - Verify both devices are on the same network
+   - Check if your network has client isolation enabled (common in public WiFi)
+   - Try using a mobile hotspot from your phone
+
+2. **Server Connection**:
+   - Make sure your server is running: `cd server && npm run dev`
+   - Try opening `http://YOUR_IP_ADDRESS:5000` in your computer's browser to verify the server is accessible
+
+3. **Firewall Issues**:
+   - Check if your computer's firewall is blocking connections
+   - Temporarily disable the firewall for testing
+   
+4. **Different API URL**:
+   - If using an Android emulator, try using `10.0.2.2` instead of your IP address
+   - Manual edit in `client/constants/Environment.ts`: change `DEV_API_HOST` to your IP
+
+For more detailed troubleshooting, refer to the [Android Troubleshooting Guide](client/ANDROID_GUIDE.md).
 
 ## API Endpoints
 
 ### Authentication
-- `POST /auth/signup` - Register a new user
-- `POST /auth/login` - Login a user
-- `GET /auth/me` - Get current user
+- `POST /api/auth/signup` - Register a new user
+- `POST /api/auth/signin` - Login a user
+- `GET /api/auth/me` - Get current user information
 
 ### Challenges
-- `POST /challenges` - Create a new challenge
-- `GET /challenges` - Get all challenges
-- `GET /challenges/:id` - Get a specific challenge
-- `POST /challenges/:id/join` - Join a challenge
-- `POST /challenges/:id/progress` - Record progress
-- `POST /challenges/:id/payment` - Mark payment as completed
+- `GET /api/challenges` - Get all challenges
+- `GET /api/challenges/:id` - Get a specific challenge
+- `GET /api/challenges/user/active` - Get user's active challenges
+- `POST /api/challenges/:id/join` - Join a challenge
 
-## Blockchain Integration (Coming Soon)
+### Wallet
+- `GET /api/wallet/balance` - Get user's wallet balance
+- `GET /api/wallet/transactions` - Get user's transaction history
 
-The application will integrate with Solana blockchain for:
-- Secure financial transactions
-- Transparent pooling of funds
-- Automated distribution of rewards
+### Leaderboard
+- `GET /api/leaderboard` - Get the global leaderboard
+- `GET /api/leaderboard/user/:userId` - Get a specific user's rank
+
+## Application Workflow
+
+1. **Authentication**: Users sign up or log in
+2. **Browse Challenges**: View available challenges
+3. **Join Challenge**: Stake funds to join a challenge
+4. **Track Progress**: Update and monitor progress
+5. **Challenge Completion**: Successful participants receive rewards from the prize pool
+
+## Development
+
+To contribute to development:
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/my-feature`
+3. Commit your changes: `git commit -m 'Add some feature'`
+4. Push to the branch: `git push origin feature/my-feature`
+5. Submit a pull request
 
 ## License
 
