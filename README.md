@@ -1,5 +1,7 @@
 # Accountability App
 
+[Watch the Video](https://video.twimg.com/ext_tw_video/1906044061628428290/pu/vid/avc1/1094x720/uQ70r0j-iufrxtHS.mp4?tag=12)
+
 A platform that allows users to create and participate in challenges with financial incentives to help them stay accountable to their goals. Users can join challenges, track their progress, and earn rewards for successful completion.
 
 ## Features
