@@ -1,7 +1,5 @@
 # Accountability App
 
-[![Watch the Video](https://img.youtube.com/vi/dQw4w9WgXcQ/0.jpg)](https://video.twimg.com/ext_tw_video/1906044061628428290/pu/vid/avc1/1094x720/uQ70r0j-iufrxtHS.mp4?tag=12)
-
 ## Features
 
 - **Financial Stakes**: Users join challenges by contributing to a prize pool
