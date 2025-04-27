@@ -13,95 +13,21 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id               String          @id @default(uuid())
-  email            String          @unique
-  username         String          @unique
-  password         String
-  wallet           Int             @default(100000)
-  createdAt        DateTime        @default(now())
-  updatedAt        DateTime        @updatedAt
-  userChallenges   UserChallenge[] // Challenges the user has joined
-  transactions     Transaction[]   // User's wallet transactions
-  leaderboardEntry LeaderboardUser?
-}
-
 model Challenge {
-  id               Int             @id @default(autoincrement())  
+  id               String   @id
   title            String
+  type             String
+  duration         String
+  progress         Float
+  participantCount Int
+  contribution     Float
+  prizePool        Float
+  status           String
   description      String
-  type             String          // Fitness, Health, etc.
-  difficulty       ChallengeDifficulty
-  image            String          // URL of the challenge image
+  rules            String[]
+  image            String
   startDate        DateTime
   endDate          DateTime
-  duration         String          // "30 days", etc.
-  userStake        Int             // In cents (e.g., 3000 = $30.00)
-  totalPrizePool   Int             // In cents (e.g., 45000 = $450.00)
-  participantCount Int
-  rules            String[]        // Array of rules
-  metrics          String
+  creatorName      String
   trackingMetrics  String[]
-  createdAt        DateTime        @default(now())
-  updatedAt        DateTime        @updatedAt
-  userChallenges   UserChallenge[] // Users who have joined this challenge
-}
-
-// Join table between User and Challenge
-model UserChallenge {
-  id             String           @id @default(uuid())
-  userId         String
-  challengeId    Int
-  status         ChallengeStatus  @default(ACTIVE)
-  progress       Float            @default(0) // 0.0 to 1.0 for progress tracking
-  stakeAmount    Int              // Amount staked by the user when joining
-  joinedAt       DateTime         @default(now())
-  completedAt    DateTime?        // Null if not completed
-  user           User             @relation(fields: [userId], references: [id])
-  challenge      Challenge        @relation(fields: [challengeId], references: [id])
-
-  @@unique([userId, challengeId])
-}
-
-// Wallet transactions for users
-model Transaction {
-  id             String           @id @default(uuid())
-  userId         String
-  amount         Int              // Positive for credits, negative for debits
-  type           TransactionType
-  description    String
-  relatedChallengeId Int?         // Optional reference to a challenge
-  createdAt      DateTime         @default(now())
-  user           User             @relation(fields: [userId], references: [id])
-}
-
-// Leaderboard data
-model LeaderboardUser {
-  id         Int      @id @default(autoincrement())
-  userId     String   @unique
-  name       String
-  points     Int
-  avatar     String
-  rank       Int
-  updatedAt  DateTime @default(now())
-  user       User     @relation(fields: [userId], references: [id])
-}
-
-enum ChallengeStatus {
-  ACTIVE
-  COMPLETED
-  FAILED
-}
-
-enum TransactionType {
-  CHALLENGE_JOIN
-  CHALLENGE_REWARD
-  SYSTEM_BONUS
-  REFERRAL_BONUS
-}
-
-enum ChallengeDifficulty {
-  EASY
-  MODERATE
-  HARD
 }

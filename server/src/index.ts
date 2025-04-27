@@ -1,10 +1,6 @@
 import express from "express";
 import cors from "cors";
 import challengesRoute from "./route/challenge";
-import authRoutes from "./route/auth";
-import walletRoutes from "./route/wallet";
-import leaderboardRoutes from "./route/leaderboard";
-import { authenticate } from "./middleware/auth";
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -18,28 +14,8 @@ app.get("/", (req, res) => {
   res.send("Accountability API Server");
 });
 
-// Auth routes
-app.use("/api/auth", authRoutes);
-
-// Protected routes - require authentication
-// Note: We're not applying authentication middleware to challenges routes yet
-// to keep compatibility with the existing frontend. Add it later when the frontend is ready.
+// All routes are now public
 app.use("/api/challenges", challengesRoute);
-
-// Wallet routes - protected by default
-app.use("/api/wallet", walletRoutes);
-
-// Leaderboard routes - publicly accessible
-app.use("/api/leaderboard", leaderboardRoutes);
-
-// Example of a protected route
-app.get("/api/protected", authenticate, (req, res) => {
-  res.json({
-    success: true,
-    message: "This is a protected route",
-    user: req.user,
-  });
-});
 
 // Start server
 app.listen(PORT, () => {

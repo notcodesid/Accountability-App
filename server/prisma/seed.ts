@@ -1,86 +1,106 @@
 import { PrismaClient } from '@prisma/client';
-import { hashPassword } from '../src/lib/password';
 
 const prisma = new PrismaClient();
 
-const leaderboardData = [
-  { name: 'Goku', points: 2850, avatar: 'https://i.pinimg.com/736x/e2/f0/6c/e2f06c9101dc22814be2a2352f7dc871.jpg', rank: 1 },
-  { name: 'Luffy', points: 2720, avatar: 'https://i.pinimg.com/736x/0d/98/b2/0d98b2916254548f2c79a57eb8768969.jpg', rank: 2 },
-  { name: 'Levi Ackerman', points: 2540, avatar: 'https://i.pinimg.com/736x/49/0c/9e/490c9ef127fca74c07c339a998e96286.jpg', rank: 3 },
-  { name: 'Light Yagami', points: 2350, avatar: 'https://i.pinimg.com/736x/91/3a/7d/913a7d47adda9de9a441c7a6c554a211.jpg', rank: 4 },
-  { name: 'Naruto Uzumaki', points: 2180, avatar: 'https://i.pinimg.com/736x/4a/28/78/4a2878cd36ba397be2163c55cfef0026.jpg', rank: 5 },
-  { name: 'Itachi Uchiha', points: 2050, avatar: 'https://i.pinimg.com/736x/ad/d7/6f/add76f09ad6577fe5c76f7af54adf633.jpg', rank: 6 },
-  { name: 'Edward Elric', points: 1920, avatar: 'https://i.pinimg.com/736x/dd/ee/f5/ddeef5dd4173a48e8f8d69272aa064ca.jpg', rank: 7 },
-  { name: 'Gojo Satoru', points: 1870, avatar: 'https://i.pinimg.com/736x/b9/66/8b/b9668b8233a769967e4ba7cdf0e0d3bf.jpg', rank: 8 },
-  { name: 'Eren Yeager', points: 1760, avatar: 'https://randomuser.me/api/portraits/men/62.jpg', rank: 9 },
-  { name: 'Zoro', points: 1650, avatar: 'https://i.pinimg.com/736x/40/15/36/4015368ab3afc5b1e352fe56b8d356b2.jpg', rank: 10 }
+const challenges = [
+  {
+    id: "1",
+    title: '10K Steps Daily',
+    type: 'Steps',
+    duration: '30 days',
+    difficulty: "MODERATE",
+    userStake: 5000, // $50.00
+    totalPrizePool: 780000, // $7,800.00
+    participantCount: 156,
+    description: 'Walk 10,000 steps every day for 30 days to complete this challenge. Track your progress with any fitness app or device.',
+    rules: [
+      'Complete 10,000 steps daily',
+      'Must sync data with fitness tracker',
+      'Rest days are not counted',
+      'Missed days will reset progress'
+    ],
+    image: 'https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?auto=format&fit=crop&w=1000',
+    startDate: new Date('2024-03-01'),
+    endDate: new Date('2024-03-30'),
+    metrics: 'Steps Count',
+    trackingMetrics: ['Steps Count', 'Distance Covered', 'Calories Burned']
+  },
+  {
+    id: "2",
+    title: 'Early Riser Challenge',
+    type: 'Daily Routine',
+    duration: '21 days',
+    difficulty: "EASY",
+    userStake: 3000, // $30.00
+    totalPrizePool: 126000, // $1,260.00
+    participantCount: 42,
+    description: 'Wake up before 6:00 AM every day for 21 days. Build discipline and maximize your mornings.',
+    rules: [
+      'Log wake-up time daily',
+      'Proof via time-stamped selfie or app tracker',
+      'Missing 2 days will disqualify from rewards'
+    ],
+    image: 'https://images.unsplash.com/photo-1550345332-09e3ac2296fa?auto=format&fit=crop&w=1000',
+    startDate: new Date('2024-05-01'),
+    endDate: new Date('2024-05-21'),
+    metrics: 'Wake Up Time',
+    trackingMetrics: ['Wake Up Time', 'Consistency', 'Check-in Proof']
+  },
+  {
+    id: "3",
+    title: 'Reading Marathon',
+    type: 'Habits',
+    duration: '15 days',
+    difficulty: "EASY",
+    userStake: 2000, // $20.00
+    totalPrizePool: 76000, // $760.00
+    participantCount: 38,
+    description: 'Read at least 20 pages every day for 15 days. Grow your mind one page at a time!',
+    rules: [
+      'Submit daily reading log',
+      'Share book title and pages read',
+      'Max 1 skip day allowed'
+    ],
+    image: 'https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=1000',
+    startDate: new Date('2024-05-05'),
+    endDate: new Date('2024-05-20'),
+    metrics: 'Pages Read',
+    trackingMetrics: ['Pages Read', 'Consistency']
+  }
 ];
 
 async function main() {
   console.log('Seeding database...');
 
-  // Create demo users for the leaderboard if they don't exist
-  for (const leaderData of leaderboardData) {
-    // Create a user with the same name (lowercase and no spaces as username)
-    const username = leaderData.name.toLowerCase().replace(/\s+/g, '');
-    
-    // Check if user already exists
-    const existingUser = await prisma.user.findUnique({
-      where: { username }
+  // Create challenges
+  for (const challenge of challenges) {
+    const existingChallenge = await prisma.challenge.findUnique({
+      where: { id: challenge.id },
     });
-    
-    if (!existingUser) {
-      // Create the user
-      const hashedPassword = await hashPassword('password123');
-      
-      const user = await prisma.user.create({
+
+    if (!existingChallenge) {
+      await prisma.challenge.create({
         data: {
-          email: `${username}@example.com`,
-          username,
-          password: hashedPassword,
-        },
+          id: challenge.id,
+          title: challenge.title,
+          type: challenge.type,
+          duration: challenge.duration,
+          progress: 0.0,
+          participantCount: challenge.participantCount,
+          contribution: challenge.userStake,
+          prizePool: challenge.totalPrizePool,
+          status: 'ACTIVE',
+          description: challenge.description,
+          rules: challenge.rules,
+          image: challenge.image,
+          startDate: challenge.startDate,
+          endDate: challenge.endDate,
+          creatorName: 'System',
+          trackingMetrics: challenge.trackingMetrics
+        }
       });
-      
-      // Create the leaderboard entry
-      await prisma.leaderboardUser.create({
-        data: {
-          userId: user.id,
-          name: leaderData.name,
-          points: leaderData.points,
-          avatar: leaderData.avatar,
-          rank: leaderData.rank,
-        },
-      });
-      
-      console.log(`Created user and leaderboard entry for ${leaderData.name}`);
-    } else {
-      // If user exists, just update the leaderboard entry
-      const existingLeaderboardEntry = await prisma.leaderboardUser.findUnique({
-        where: { userId: existingUser.id }
-      });
-      
-      if (existingLeaderboardEntry) {
-        await prisma.leaderboardUser.update({
-          where: { id: existingLeaderboardEntry.id },
-          data: {
-            points: leaderData.points,
-            avatar: leaderData.avatar,
-            rank: leaderData.rank,
-          },
-        });
-        console.log(`Updated leaderboard entry for ${leaderData.name}`);
-      } else {
-        await prisma.leaderboardUser.create({
-          data: {
-            userId: existingUser.id,
-            name: leaderData.name,
-            points: leaderData.points,
-            avatar: leaderData.avatar,
-            rank: leaderData.rank,
-          },
-        });
-        console.log(`Created leaderboard entry for existing user ${leaderData.name}`);
-      }
+
+      console.log(`Created challenge: ${challenge.title}`);
     }
   }
 
