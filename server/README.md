@@ -1,14 +1,25 @@
-# Accountability App - Backend Server
+# accountability app - backend server
 
-This is the backend server for the Accountability App, a platform that allows users to create and participate in challenges with financial incentives.
+this is the backend server for the accountability app, a platform that allows users to create and participate in challenges with financial incentives.
 
-## Technologies
+## technologies
 
-- Node.js with Express
-- TypeScript
-- PostgreSQL with Prisma ORM
+- node.js with express
+- typeScript
+- postgresql with prisma 
 
-# API Endpoints
+# api endpoints
 
-### Authentication
+### challenges
+getting all the challenges
+
+```http
+GET /api/challenges
+```
+
+getting a specific challenge
+```http
+GET /api/challenges/:id
+```
+
 
