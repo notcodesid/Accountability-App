@@ -1,7 +1,7 @@
 {
-  "name": "accountability-server",
+  "name": "lockin-server",
   "version": "1.0.0",
-  "description": "This is the backend server for the Accountability App, a platform that allows users to create and participate in challenges with financial incentives.",
+  "description": "This is the backend server for the lockin App, a platform that allows users to create and participate in challenges with financial incentives.",
   "main": "dist/src/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",

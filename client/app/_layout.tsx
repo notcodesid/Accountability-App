@@ -11,7 +11,7 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <AuthProvider>
         <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="index" options={{ headerShown: false }} />
+          <Stack.Screen name="/" options={{ headerShown: false }} />
           <Stack.Screen name="onboarding/email" options={{ headerShown: false }} />
           <Stack.Screen name="onboarding/otp" options={{ headerShown: false }} />
           <Stack.Screen name="onboarding/password" options={{ headerShown: false }} />

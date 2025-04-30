@@ -1,14 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, Image, TouchableOpacity, ImageBackground, FlatList, ListRenderItem, StatusBar } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  View,
+  TouchableOpacity,
+  ImageBackground,
+  FlatList,
+  ListRenderItem,
+  StatusBar,
+} from "react-native";
 import { Ionicons } from '@expo/vector-icons';
-import { Colors, HomeColors, OnboardingColors } from '../../constants/Colors';
-import SafeScreenView from '../../components/SafeScreenView';
+import { HomeColors, OnboardingColors } from '../../constants/Colors';
 import { LinearGradient } from 'expo-linear-gradient';
 import LoadingSpinner from '../../components/LoadingSpinner';
-import { getChallenges } from '../../services/api';
 import { useRouter } from 'expo-router';
 
-// Type definitions for our data structure
 interface Challenge {
   id: string;
   title: string;
@@ -16,11 +22,13 @@ interface Challenge {
   duration: string;
   participants: number;
   difficulty: string;
-  contributionAmount: string;
-  prizeAmount: string;
+  userStake: number;
+  totalPrizePool: number;
   type: string;
+  hostType: 'ORG' | 'FRIEND';
+  sponsor?: string;
+  creator?: string;
   metrics?: string;
-  details?: string[];
   trackingMetrics?: string[];
 }
 
@@ -32,47 +40,77 @@ export default function Home() {
   const router = useRouter();
 
   useEffect(() => {
-    fetchChallenges();
+    const mockChallenges: Challenge[] = [
+      {
+        id: "1",
+        title: 'Nike Move Marathon',
+        type: 'Fitness',
+        hostType: 'ORG',
+        sponsor: 'Nike',
+        duration: '30 days',
+        difficulty: "MODERATE",
+        userStake: 1.5,
+        totalPrizePool: 100,
+        participants: 100,
+        metrics: "Steps",
+        trackingMetrics: ["steps"],
+        image: 'https://images.unsplash.com/photo-1593079831268-3381b0db4a77',
+      },
+      {
+        id: "2",
+        title: 'Headspace Mindfulness Sprint',
+        type: 'Mental Health',
+        hostType: 'ORG',
+        sponsor: 'Headspace',
+        duration: '21 days',
+        difficulty: "EASY",
+        userStake: 1,
+        totalPrizePool: 200,
+        participants: 300,
+        metrics: "Minutes",
+        trackingMetrics: ["meditation_minutes"],
+        image: 'https://images.unsplash.com/photo-1606639386701-f3826670507c?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+      },
+      {
+        id: "3",
+        title: 'Code Daily Crew Challenge',
+        type: 'Programming',
+        hostType: 'FRIEND',
+        creator: 'Sarah_Dev',
+        duration: '45 days',
+        difficulty: "HARD",
+        userStake: 2,
+        totalPrizePool: 21.6,
+        participants: 12,
+        metrics: "Code Commits",
+        trackingMetrics: ["github_commits"],
+        image: 'https://images.unsplash.com/photo-1619410283995-43d9134e7656',
+      },
+      {
+        id: "4",
+        title: 'Vegan30 Squad',
+        type: 'Lifestyle',
+        hostType: 'FRIEND',
+        creator: 'EcoMike',
+        duration: '30 days',
+        difficulty: "MODERATE",
+        userStake: 1.2,
+        totalPrizePool: 10.8,
+        participants: 10,
+        metrics: "Check-ins",
+        trackingMetrics: ["meal_photos", "community_votes"],
+        image: 'https://images.unsplash.com/photo-1543352634-a1c51d9f1fa7',
+      }
+    ];
+
+    setChallenges(mockChallenges);
+    setLoading(false);
   }, []);
 
-  const fetchChallenges = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      const response = await getChallenges();
-
-      if (response.success) {
-        // Transform API data to match our UI format
-        const transformedChallenges = response.data.map(apiChallenge => ({
-          id: apiChallenge.id.toString(),
-          title: apiChallenge.title,
-          image: apiChallenge.image,
-          duration: apiChallenge.duration,
-          participants: apiChallenge.participantCount,
-          difficulty: apiChallenge.difficulty,
-          contributionAmount: `$${(apiChallenge.userStake / 100).toFixed(0)}`,
-          prizeAmount: `$${(apiChallenge.totalPrizePool / 100).toFixed(0)}`,
-          type: apiChallenge.type.toLowerCase(),
-          metrics: apiChallenge.metrics,
-          details: [apiChallenge.type, apiChallenge.description?.split('.')[0] || '', apiChallenge.difficulty],
-          trackingMetrics: apiChallenge.trackingMetrics
-        }));
-        setChallenges(transformedChallenges);
-      } else {
-        setError('Failed to fetch challenges');
-      }
-    } catch (err) {
-      console.error('Error fetching challenges:', err);
-      setError('An error occurred while fetching challenges');
-    } finally {
-      setLoading(false);
-    }
+  const onRefresh = () => {
+    setLoading(true);
+    setTimeout(() => setLoading(false), 500);
   };
-
-  const selectedChallengeData = selectedChallenge
-    ? challenges.find(c => c.id === selectedChallenge)
-    : null;
 
   const renderChallengeItem: ListRenderItem<Challenge> = ({ item }) => (
     <TouchableOpacity
@@ -80,7 +118,9 @@ export default function Home() {
         styles.challengeCard,
         selectedChallenge === item.id && styles.selectedChallengeCard
       ]}
-      onPress={() => setSelectedChallenge(selectedChallenge === item.id ? null : item.id)}
+      onPress={() =>
+        setSelectedChallenge(selectedChallenge === item.id ? null : item.id)
+      }
     >
       <ImageBackground
         source={{ uri: item.image }}
@@ -90,19 +130,28 @@ export default function Home() {
         <LinearGradient
           colors={['rgba(0,0,0,0.1)', 'rgba(0,0,0,0.8)']}
           style={styles.gradient}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 0, y: 1 }}
         >
           <View style={styles.challengeHeader}>
             <Text style={styles.challengeTitle}>{item.title}</Text>
-            {item.metrics && (
-              <Text style={styles.metricsText}>{item.metrics}</Text>
-            )}
+            {item.metrics && <Text style={styles.metricsText}>{item.metrics}</Text>}
           </View>
         </LinearGradient>
       </ImageBackground>
 
       <View style={styles.challengeDetails}>
+        <View style={styles.hostContainer}>
+          <Ionicons 
+            name={item.hostType === 'ORG' ? 'business' : 'people'} 
+            size={14} 
+            color={HomeColors.text} 
+          />
+          <Text style={styles.hostText}>
+            {item.hostType === 'ORG' 
+              ? `Sponsored by ${item.sponsor}`
+              : `Created by ${item.creator}`}
+          </Text>
+        </View>
+
         <View style={styles.detailRow}>
           <View style={styles.detailItem}>
             <Ionicons name="calendar" size={14} color={HomeColors.text} />
@@ -117,160 +166,80 @@ export default function Home() {
         <View style={styles.detailRow}>
           <View style={styles.detailItem}>
             <Ionicons name="wallet" size={14} color={HomeColors.text} />
-            <Text style={styles.detailText}>Contribution: {item.contributionAmount}</Text>
+            <Text style={styles.detailText}>Stake: {item.userStake} SOL</Text>
           </View>
           <View style={styles.detailItem}>
             <Ionicons name="trophy" size={14} color={HomeColors.text} />
-            <Text style={styles.detailText}>Prize: {item.prizeAmount}</Text>
+            <Text style={styles.detailText}>Prize: {item.totalPrizePool} SOL</Text>
           </View>
         </View>
       </View>
     </TouchableOpacity>
   );
 
-  // Render error state
+  if (loading) return <LoadingSpinner />;
+
   if (error) {
     return (
-      <SafeScreenView style={styles.container} backgroundColor={HomeColors.background}>
-        <StatusBar barStyle="light-content" />
-        <View style={styles.errorContainer}>
-          <Ionicons name="alert-circle-outline" size={60} color={HomeColors.textSecondary} />
-          <Text style={styles.errorText}>{error}</Text>
-          <TouchableOpacity
-            style={styles.retryButton}
-            onPress={fetchChallenges}
-          >
-            <Text style={styles.retryButtonText}>Retry</Text>
-          </TouchableOpacity>
-        </View>
-      </SafeScreenView>
-    );
-  }
-
-  // Render loading state
-  if (loading) {
-    return (
-      <>
-        <SafeScreenView style={styles.container} backgroundColor={HomeColors.background}>
-          <StatusBar barStyle="light-content" />
-        </SafeScreenView>
-        <LoadingSpinner message="Loading challenges..." />
-      </>
+      <View style={styles.errorContainer}>
+        <Text style={styles.errorText}>Something went wrong!</Text>
+        <TouchableOpacity style={styles.retryButton} onPress={onRefresh}>
+          <Text style={styles.retryButtonText}>Try Again</Text>
+        </TouchableOpacity>
+      </View>
     );
   }
 
   return (
-    <SafeScreenView style={styles.container} backgroundColor={HomeColors.background} scrollable={false}>
+    <View style={styles.container}>
       <StatusBar barStyle="light-content" />
-
-      <View style={styles.selectedHeaderContainer}>
-        <LinearGradient
-          colors={['rgba(23, 23, 23, 0.9)', 'rgba(10, 10, 10, 0.95)']}
-          style={styles.headerGradient}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 0, y: 1 }}
-        >
-          <View style={styles.selectedHeaderContent}>
-            {selectedChallengeData ? (
-              // Selected Challenge Header Content
-              <>
-                <Text style={styles.selectedHeaderTitle}>{selectedChallengeData.title}</Text>
-
-                {selectedChallengeData.details ? (
-                  <Text style={styles.selectedHeaderDetails}>
-                    {selectedChallengeData.metrics} • {selectedChallengeData.details.join(' • ')}
-                  </Text>
-                ) : (
-                  <Text style={styles.selectedHeaderDetails}>
-                    {selectedChallengeData.metrics} • {selectedChallengeData.difficulty}
-                  </Text>
-                )}
-              </>
-            ) : (
-              // Default Header Content
-              <>
-                <Text style={styles.selectedHeaderTitle}>Discover Challenges</Text>
-                <Text style={styles.selectedHeaderDetails}>Find your next accountability journey</Text>
-              </>
-            )}
-          </View>
-        </LinearGradient>
+      <View style={styles.safeAreaTop} />
+      <View style={styles.mainContainer}>
+        <FlatList
+          data={challenges}
+          keyExtractor={(item) => item.id}
+          renderItem={renderChallengeItem}
+          contentContainerStyle={styles.listContent}
+          ItemSeparatorComponent={() => <View style={styles.separator} />}
+        />
       </View>
-
-      <FlatList
-        data={challenges}
-        renderItem={renderChallengeItem}
-        keyExtractor={item => item.id}
-        contentContainerStyle={[
-          styles.listContent,
-          selectedChallenge && styles.paddedListContent // Add padding when button is visible
-        ]}
-        showsVerticalScrollIndicator={false}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
-        onRefresh={fetchChallenges}
-        refreshing={loading}
-      />
-
       {selectedChallenge && (
-        <View style={styles.startButtonContainer}>
+        <View style={styles.bottomButtonContainer}>
           <TouchableOpacity 
-            style={styles.startButton} 
-            activeOpacity={0.8}
+            style={styles.selectButton}
             onPress={() => router.push(`/challenges/${selectedChallenge}`)}
           >
-            <Ionicons name="play-circle" size={24} color="#262626" style={styles.playIcon} />
-            <Text style={styles.startButtonText}>Start</Text>
+            <Text style={styles.selectButtonText}>Start Challenge</Text>
           </TouchableOpacity>
         </View>
       )}
-    </SafeScreenView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: HomeColors.background,
   },
-  // Styles for selected challenge header
-  selectedHeaderContainer: {
-    width: '100%',
+  safeAreaTop: {
+    height: 50, 
+    backgroundColor: HomeColors.background,
   },
-  headerGradient: {
-    paddingTop: 40,
-    paddingBottom: 15,
-    paddingHorizontal: 20,
-  },
-  selectedHeaderContent: {
-    flexDirection: 'column',
-    position: 'relative',
-  },
-  selectedHeaderTitle: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginBottom: 8,
-  },
-  selectedHeaderDetails: {
-    fontSize: 14,
-    color: 'rgba(255, 255, 255, 0.7)',
+  mainContainer: {
+    flex: 1,
   },
   listContent: {
     padding: 16,
-    paddingTop: 20,
-    paddingBottom: 20,
+    paddingBottom: 90, 
   },
-  paddedListContent: {
-    paddingBottom: 90, // Make room for the start button
+  separator: {
+    height: 16,
   },
   challengeCard: {
     backgroundColor: HomeColors.challengeCard,
-    borderRadius: 16,
+    borderRadius: 12,
     overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 5,
   },
   selectedChallengeCard: {
     borderColor: HomeColors.accent,
@@ -281,8 +250,8 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   imageStyle: {
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
   },
   gradient: {
     height: '100%',
@@ -309,6 +278,16 @@ const styles = StyleSheet.create({
   challengeDetails: {
     padding: 16,
   },
+  hostContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  hostText: {
+    fontSize: 13,
+    color: HomeColors.text,
+    marginLeft: 6,
+  },
   detailRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -321,38 +300,7 @@ const styles = StyleSheet.create({
   detailText: {
     fontSize: 13,
     color: HomeColors.text,
-    marginLeft: 6,
-  },
-  separator: {
-    height: 20,
-  },
-  startButtonContainer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    padding: 16,
-  },
-  startButton: {
-    backgroundColor: '#fefffe',
-    borderRadius: 30,
-    padding: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  playIcon: {
-    marginRight: 8,
-  },
-  startButtonText: {
-    color: '#262626',
-    fontSize: 18,
-    fontWeight: 'bold',
+    marginLeft: 4,
   },
   errorContainer: {
     flex: 1,
@@ -377,5 +325,27 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+  },
+  bottomButtonContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: 16,
+    paddingBottom: 90, 
+    zIndex: 999, 
+  },
+  selectButton: {
+    backgroundColor: HomeColors.accent,
+    padding: 16,
+    borderRadius: 12,
+    width: '100%',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  selectButtonText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 18,
   },
 });

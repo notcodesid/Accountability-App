@@ -13,7 +13,7 @@ app.use(express_1.default.json());
 app.use((0, cors_1.default)());
 // Public routes
 app.get("/", (req, res) => {
-    res.send("Accountability API Server");
+    res.send("lockin API Server");
 });
 // All routes are now public
 app.use("/api/challenges", challenge_1.default);

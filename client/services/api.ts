@@ -11,14 +11,14 @@ const getBaseUrl = () => {
 };
 
 // Get auth token from storage
-export const getAuthToken = async (): Promise<string | null> => {
-  try {
-    return await AsyncStorage.getItem('auth_token');
-  } catch (error) {
-    logError('Error retrieving auth token:', error);
-    return null;
-  }
-};
+// export const getAuthToken = async (): Promise<string | null> => {
+//   try {
+//     return await AsyncStorage.getItem('auth_token');
+//   } catch (error) {
+//     logError('Error retrieving auth token:', error);
+//     return null;
+//   }
+// };
 
 // Set auth token in storage
 export const setAuthToken = async (token: string): Promise<void> => {

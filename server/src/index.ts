@@ -11,7 +11,7 @@ app.use(cors());
 
 // Public routes
 app.get("/", (req, res) => {
-  res.send("Accountability API Server");
+  res.send("lockin API Server");
 });
 
 // All routes are now public

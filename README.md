@@ -1,4 +1,4 @@
-# Accountability App
+# lockin App
 
 ## Features
 

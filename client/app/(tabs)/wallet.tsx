@@ -56,7 +56,7 @@
 //                 >
 //                     <View style={styles.selectedHeaderContent}>
 //                         <Text style={styles.selectedHeaderTitle}>Wallet</Text>
-//                         <Text style={styles.selectedHeaderDetails}>Manage your accountability tokens</Text>
+//                         <Text style={styles.selectedHeaderDetails}>Manage your lockin tokens</Text>
 //                     </View>
 //                 </LinearGradient>
 //             </View>
@@ -223,7 +223,7 @@
 
 //             <View style={styles.section}>
 //                 <View style={styles.sectionHeader}>
-//                     <Text style={styles.sectionTitle}>Accountability Shop</Text>
+//                     <Text style={styles.sectionTitle}>lockin Shop</Text>
 //                     <TouchableOpacity>
 //                         <Text style={styles.seeAllText}>Browse All</Text>
 //                     </TouchableOpacity>

@@ -201,13 +201,12 @@ export default function ChallengeDetailsScreen() {
                                         'You have successfully joined the challenge.',
                                         [
                                             {
-                                                text: 'View My Challenges',
-                                                onPress: () => router.push('/challenges'),
-                                            },
-                                            {
-                                                text: 'Stay Here',
-                                                style: 'cancel',
-                                            },
+                                                text: 'OK',
+                                                onPress: () => {
+                                                    // Go back to the challenges list
+                                                    router.back();
+                                                }
+                                            }
                                         ]
                                     );
                                     setAlreadyJoined(true);
@@ -230,10 +229,36 @@ export default function ChallengeDetailsScreen() {
         }
     };
     
+    // Helper function to determine the tracking route based on challenge type
+    const getTrackingRoute = (challengeType: string) => {
+        type TrackingRoute = '/tracking/fitness' | '/tracking/meditation' | '/tracking/coding' | '/tracking/lifestyle' | '/tracking';
+        
+        const route: TrackingRoute = (() => {
+            switch (challengeType.toLowerCase()) {
+                case 'fitness':
+                case 'steps':
+                    return '/tracking/fitness';
+                case 'mental health':
+                case 'meditation':
+                    return '/tracking/meditation';
+                case 'programming':
+                case 'coding':
+                    return '/tracking/coding';
+                case 'lifestyle':
+                case 'vegan':
+                    return '/tracking/lifestyle';
+                default:
+                    return '/tracking';
+            }
+        })();
+        
+        return route;
+    };
+    
     // Render error state
     if (error) {
         return (
-            <SafeScreenView style={styles.container} backgroundColor={HomeColors.background}>
+            <View style={[styles.container, { backgroundColor: HomeColors.background }]}>
                 <StatusBar barStyle="light-content" />
                 <View style={styles.errorContainer}>
                     <Ionicons name="alert-circle-outline" size={60} color={HomeColors.textSecondary} />
@@ -242,26 +267,24 @@ export default function ChallengeDetailsScreen() {
                         <Text style={styles.backButtonText}>Return to Challenges</Text>
                     </TouchableOpacity>
                 </View>
-            </SafeScreenView>
+            </View>
         );
     }
     
     // Render loading state
     if (loading) {
         return (
-            <>
-                <SafeScreenView style={styles.container} backgroundColor={HomeColors.background}>
-                    <StatusBar barStyle="light-content" />
-                </SafeScreenView>
+            <View style={[styles.container, { backgroundColor: HomeColors.background }]}>
+                <StatusBar barStyle="light-content" />
                 <LoadingSpinner message="Loading challenge..." />
-            </>
+            </View>
         );
     }
     
     // Render not found state
     if (!challenge) {
         return (
-            <SafeScreenView style={styles.container} backgroundColor={HomeColors.background}>
+            <View style={[styles.container, { backgroundColor: HomeColors.background }]}>
                 <StatusBar barStyle="light-content" />
                 <View style={styles.errorContainer}>
                     <Ionicons name="alert-circle-outline" size={60} color={HomeColors.textSecondary} />
@@ -270,12 +293,12 @@ export default function ChallengeDetailsScreen() {
                         <Text style={styles.backButtonText}>Return to Challenges</Text>
                     </TouchableOpacity>
                 </View>
-            </SafeScreenView>
+            </View>
         );
     }
 
     return (
-        <SafeScreenView style={styles.container} backgroundColor={HomeColors.background} scrollable={false}>
+        <View style={[styles.container, { backgroundColor: HomeColors.background }]}>
             <StatusBar barStyle="light-content" />
             
             <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
@@ -413,7 +436,7 @@ export default function ChallengeDetailsScreen() {
                     </TouchableOpacity>
                 )}
             </View>
-        </SafeScreenView>
+        </View>
     );
 }
 

@@ -1,6 +1,6 @@
-# accountability app - backend server
+# LOCKIN app - backend server
 
-this is the backend server for the accountability app, a platform that allows users to create and participate in challenges with financial incentives.
+this is the backend server for the lockin app, a platform that allows users to create and participate in challenges with financial incentives.
 
 ## technologies
 
