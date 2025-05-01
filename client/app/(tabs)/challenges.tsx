@@ -5,8 +5,171 @@ import { Colors, HomeColors, OnboardingColors } from '../../constants/Colors';
 import { router } from 'expo-router';
 import SafeScreenView from '../../components/SafeScreenView';
 import { LinearGradient } from 'expo-linear-gradient';
-import { getUserActiveChallenges, UserChallenge } from '../../services/api';
 import LoadingSpinner from '../../components/LoadingSpinner';
+
+// Mock challenge data
+interface Challenge {
+    id: string;
+    title: string;
+    type: string;
+    difficulty: string;
+    image: string;
+    description: string;
+    duration: number;
+    reward: number;
+}
+
+interface UserChallenge {
+    id: string;
+    challengeId: string;
+    userId: string;
+    status: string;
+    progress: number;
+    startDate: string;
+    endDate: string | null;
+    challenge: Challenge;
+}
+
+// Mock active challenges
+const MOCK_ACTIVE_CHALLENGES: UserChallenge[] = [
+    {
+        id: 'uc1',
+        challengeId: 'c1',
+        userId: 'u1',
+        status: 'ACTIVE',
+        progress: 0.65,
+        startDate: '2025-04-15T00:00:00Z',
+        endDate: null,
+        challenge: {
+            id: 'c1',
+            title: '30 Days of Meditation',
+            type: 'Wellness',
+            difficulty: 'Medium',
+            image: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?q=80&w=2070',
+            description: 'Meditate for at least 10 minutes every day for 30 days.',
+            duration: 30,
+            reward: 50
+        }
+    },
+    {
+        id: 'uc2',
+        challengeId: 'c2',
+        userId: 'u1',
+        status: 'ACTIVE',
+        progress: 0.33,
+        startDate: '2025-04-20T00:00:00Z',
+        endDate: null,
+        challenge: {
+            id: 'c2',
+            title: 'Code for 100 Hours',
+            type: 'Productivity',
+            difficulty: 'Hard',
+            image: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?q=80&w=2070',
+            description: 'Complete 100 hours of coding in 30 days.',
+            duration: 30,
+            reward: 75
+        }
+    },
+    {
+        id: 'uc3',
+        challengeId: 'c3',
+        userId: 'u1',
+        status: 'ACTIVE',
+        progress: 0.85,
+        startDate: '2025-04-10T00:00:00Z',
+        endDate: null,
+        challenge: {
+            id: 'c3',
+            title: '10K Steps Daily',
+            type: 'Fitness',
+            difficulty: 'Easy',
+            image: 'https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?q=80&w=2070',
+            description: 'Walk at least 10,000 steps every day for 21 days.',
+            duration: 21,
+            reward: 40
+        }
+    }
+];
+
+// Mock completed challenges
+const MOCK_COMPLETED_CHALLENGES: UserChallenge[] = [
+    {
+        id: 'uc4',
+        challengeId: 'c4',
+        userId: 'u1',
+        status: 'COMPLETED',
+        progress: 1.0,
+        startDate: '2025-03-01T00:00:00Z',
+        endDate: '2025-03-21T00:00:00Z',
+        challenge: {
+            id: 'c4',
+            title: 'Learn a New Language',
+            type: 'Education',
+            difficulty: 'Medium',
+            image: 'https://images.unsplash.com/photo-1546410531-bb4caa6b424d?q=80&w=2071',
+            description: 'Study a new language for at least 30 minutes every day for 21 days.',
+            duration: 21,
+            reward: 45
+        }
+    },
+    {
+        id: 'uc5',
+        challengeId: 'c5',
+        userId: 'u1',
+        status: 'COMPLETED',
+        progress: 1.0,
+        startDate: '2025-02-15T00:00:00Z',
+        endDate: '2025-03-15T00:00:00Z',
+        challenge: {
+            id: 'c5',
+            title: 'No Social Media',
+            type: 'Digital Wellness',
+            difficulty: 'Hard',
+            image: 'https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?q=80&w=1974',
+            description: 'Avoid all social media platforms for 30 days straight.',
+            duration: 30,
+            reward: 80
+        }
+    },
+    {
+        id: 'uc6',
+        challengeId: 'c6',
+        userId: 'u1',
+        status: 'COMPLETED',
+        progress: 1.0,
+        startDate: '2025-01-10T00:00:00Z',
+        endDate: '2025-02-10T00:00:00Z',
+        challenge: {
+            id: 'c6',
+            title: 'Daily Journaling',
+            type: 'Mindfulness',
+            difficulty: 'Easy',
+            image: 'https://images.unsplash.com/photo-1517842645767-c639042777db?q=80&w=2070',
+            description: 'Write in your journal for at least 10 minutes every day for 30 days.',
+            duration: 30,
+            reward: 35
+        }
+    },
+    {
+        id: 'uc7',
+        challengeId: 'c7',
+        userId: 'u1',
+        status: 'COMPLETED',
+        progress: 1.0,
+        startDate: '2024-12-01T00:00:00Z',
+        endDate: '2024-12-31T00:00:00Z',
+        challenge: {
+            id: 'c7',
+            title: 'Cold Shower Challenge',
+            type: 'Wellness',
+            difficulty: 'Medium',
+            image: 'https://images.unsplash.com/photo-1532938911079-1b06ac7ceec7?q=80&w=1932',
+            description: 'Take a cold shower every morning for 30 days.',
+            duration: 30,
+            reward: 60
+        }
+    }
+];
 
 export default function ChallengesScreen() {
     const [activeTab, setActiveTab] = useState('active');
@@ -40,25 +203,16 @@ export default function ChallengesScreen() {
             setLoading(true);
             setError(null);
             
-            // Fetch active challenges from API
-            const response = await getUserActiveChallenges();
+            // Simulate API call with a delay
+            setTimeout(() => {
+                setActiveChallenges(MOCK_ACTIVE_CHALLENGES);
+                setCompletedChallenges(MOCK_COMPLETED_CHALLENGES);
+                setLoading(false);
+            }, 1000);
             
-            if (response.success) {
-                // Filter challenges by status (case-insensitive comparison)
-                const active = response.data.filter(c => 
-                    c.status.toUpperCase() === 'ACTIVE');
-                const completed = response.data.filter(c => 
-                    c.status.toUpperCase() === 'COMPLETED');
-                
-                setActiveChallenges(active);
-                setCompletedChallenges(completed);
-            } else {
-                setError('Failed to fetch challenges');
-            }
         } catch (err) {
             console.error('Error fetching user challenges:', err);
             setError('An error occurred while fetching challenges');
-        } finally {
             setLoading(false);
         }
     };
@@ -148,6 +302,11 @@ export default function ChallengesScreen() {
                                 source={{ uri: item.challenge.image }} 
                                 style={styles.challengeImage}
                             />
+                            {activeTab === 'completed' && (
+                                <View style={styles.completedBadge}>
+                                    <Ionicons name="checkmark-circle" size={24} color="#4CAF50" />
+                                </View>
+                            )}
                         </View>
                         <View style={styles.challengeContent}>
                             <Text style={styles.challengeTitle}>
@@ -160,13 +319,20 @@ export default function ChallengesScreen() {
                                 <View 
                                     style={[
                                         styles.progressBar, 
-                                        { width: `${item.progress * 100}%` }
+                                        { width: `${item.progress * 100}%` },
+                                        activeTab === 'completed' && styles.completedProgressBar
                                     ]}
                                 />
                             </View>
-                            <Text style={styles.progressText}>
-                                {Math.round(item.progress * 100)}% complete
-                            </Text>
+                            <View style={styles.challengeFooter}>
+                                <Text style={styles.progressText}>
+                                    {Math.round(item.progress * 100)}% complete
+                                </Text>
+                                <View style={styles.rewardContainer}>
+                                    <Ionicons name="wallet-outline" size={14} color="#FFD700" />
+                                    <Text style={styles.rewardText}>{item.challenge.reward} SOL</Text>
+                                </View>
+                            </View>
                         </View>
                     </TouchableOpacity>
                 ))}
@@ -175,8 +341,9 @@ export default function ChallengesScreen() {
     };
 
     return (
-        <SafeScreenView style={styles.container} backgroundColor={HomeColors.background} scrollable={false}>
+        <View style={styles.container}>
             <StatusBar barStyle="light-content" />
+            <View style={styles.safeAreaTop} />
             
             <View style={styles.selectedHeaderContainer}>
                 <LinearGradient
@@ -208,20 +375,24 @@ export default function ChallengesScreen() {
             </View>
             
             {renderChallenges()}
-        </SafeScreenView>
+        </View>
     );
 }
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+        backgroundColor: HomeColors.background,
+    },
+    safeAreaTop: {
+        height: 50,
+        backgroundColor: HomeColors.background,
     },
     selectedHeaderContainer: {
         width: '100%',
     },
     headerGradient: {
-        paddingTop: 40,
-        paddingBottom: 15,
+        paddingVertical: 15,
         paddingHorizontal: 20,
     },
     selectedHeaderContent: {
@@ -240,48 +411,48 @@ const styles = StyleSheet.create({
     },
     tabs: {
         flexDirection: 'row',
+        borderBottomWidth: 1,
+        borderBottomColor: 'rgba(255, 255, 255, 0.1)',
         backgroundColor: HomeColors.challengeCard,
-        marginTop: 20,
-        marginBottom: 10,
-        paddingVertical: 10,
     },
     tab: {
         flex: 1,
+        paddingVertical: 15,
         alignItems: 'center',
-        paddingVertical: 8,
     },
     activeTab: {
         borderBottomWidth: 2,
         borderBottomColor: OnboardingColors.accentColor,
     },
     tabText: {
+        fontSize: 16,
         fontWeight: '500',
         color: HomeColors.textSecondary,
     },
     activeTabText: {
-        color: OnboardingColors.accentColor,
+        color: '#fff',
+    },
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: HomeColors.challengeCard,
     },
     emptyStateContainer: {
         flex: 1,
-        alignItems: 'center',
         justifyContent: 'center',
-        padding: 30,
-        marginTop: 40,
+        alignItems: 'center',
+        padding: 20,
+        backgroundColor: HomeColors.challengeCard,
     },
     emptyStateIcon: {
-        width: 120,
-        height: 120,
-        borderRadius: 60,
-        backgroundColor: 'rgba(255, 255, 255, 0.05)',
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginBottom: 30,
+        marginBottom: 20,
     },
     emptyStateTitle: {
-        fontSize: 22,
+        fontSize: 20,
         fontWeight: 'bold',
-        color: HomeColors.text,
-        marginBottom: 15,
+        color: '#fff',
+        marginBottom: 10,
         textAlign: 'center',
     },
     emptyStateDescription: {
@@ -289,83 +460,99 @@ const styles = StyleSheet.create({
         color: HomeColors.textSecondary,
         textAlign: 'center',
         marginBottom: 30,
-        lineHeight: 24,
     },
     joinNowButton: {
-        width: '100%',
-        borderRadius: 30,
-        height: 56,
+        width: '80%',
+        height: 50,
+        borderRadius: 25,
         overflow: 'hidden',
-        shadowColor: OnboardingColors.accentColor,
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
-        elevation: 6,
     },
     gradientButton: {
-        width: '100%',
-        height: '100%',
+        flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
     },
     joinNowButtonText: {
-        color: '#FFFFFF',
-        fontSize: 18,
-        fontWeight: '600',
-    },
-    loadingContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: 'bold',
     },
     challengesList: {
         flex: 1,
-        padding: 15,
+        backgroundColor: HomeColors.challengeCard,
     },
     challengeItem: {
         flexDirection: 'row',
-        backgroundColor: HomeColors.challengeCard,
-        borderRadius: 10,
-        marginBottom: 15,
-        overflow: 'hidden',
+        padding: 15,
+        borderBottomWidth: 1,
+        borderBottomColor: 'rgba(255, 255, 255, 0.05)',
     },
     challengeImageContainer: {
-        width: 100,
-        height: 100,
+        width: 80,
+        height: 80,
+        borderRadius: 10,
+        overflow: 'hidden',
+        position: 'relative',
     },
     challengeImage: {
         width: '100%',
         height: '100%',
-        resizeMode: 'cover',
+    },
+    completedBadge: {
+        position: 'absolute',
+        top: 5,
+        right: 5,
+        backgroundColor: 'rgba(0, 0, 0, 0.6)',
+        borderRadius: 12,
+        padding: 2,
     },
     challengeContent: {
         flex: 1,
-        padding: 15,
+        marginLeft: 15,
+        justifyContent: 'space-between',
     },
     challengeTitle: {
         fontSize: 16,
-        fontWeight: '600',
-        color: HomeColors.text,
+        fontWeight: 'bold',
+        color: '#fff',
         marginBottom: 4,
     },
     challengeType: {
-        fontSize: 12,
+        fontSize: 14,
         color: HomeColors.textSecondary,
-        marginBottom: 8,
+        marginBottom: 10,
     },
     progressContainer: {
-        height: 4,
+        height: 6,
         backgroundColor: 'rgba(255, 255, 255, 0.1)',
-        borderRadius: 2,
-        marginBottom: 6,
+        borderRadius: 3,
+        marginBottom: 8,
     },
     progressBar: {
-        height: 4,
+        height: '100%',
         backgroundColor: OnboardingColors.accentColor,
-        borderRadius: 2,
+        borderRadius: 3,
+    },
+    completedProgressBar: {
+        backgroundColor: '#4CAF50',
+    },
+    challengeFooter: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
     },
     progressText: {
         fontSize: 12,
         color: HomeColors.textSecondary,
+    },
+    rewardContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    rewardText: {
+        fontSize: 12,
+        fontWeight: 'bold',
+        color: '#FFD700',
+        marginLeft: 4,
     },
 });
