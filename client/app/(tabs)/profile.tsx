@@ -3,13 +3,14 @@ import { StyleSheet, Text, View, Image, TouchableOpacity, ScrollView, StatusBar 
 import { Ionicons } from '@expo/vector-icons';
 import { HomeColors, OnboardingColors } from '../../constants/Colors';
 import { LinearGradient } from 'expo-linear-gradient';
+import { router } from 'expo-router';
 
 // Mock user data
 const MOCK_USER = {
   id: '1',
   name: 'siddharth',
   username: '@notcodesid',
-  bio: 'Fitness enthusiast and challenge lover. Always up for a new adventure!',
+  bio: 'i am just an observer.',
   avatar: 'https://pbs.twimg.com/profile_images/1900043039831449603/EzgPL3sp_400x400.jpg',
   stats: {
     completedChallenges: 12,
@@ -21,16 +22,13 @@ const MOCK_USER = {
     { id: '2', title: 'Meditation Master', date: '2024-02-28', icon: 'heart' as any },
     { id: '3', title: 'Code Challenge Champion', date: '2024-01-10', icon: 'code-slash' as any }
   ],
-  wallet: {
-    balance: 245.5,
-    transactions: [
-      { id: 't1', type: 'deposit', amount: 50, date: '2024-03-20', description: 'Challenge reward' },
-      { id: 't2', type: 'deposit', amount: 75, date: '2024-03-15', description: 'Challenge reward' },
-      { id: 't3', type: 'withdrawal', amount: -30, date: '2024-03-10', description: 'Challenge entry fee' },
-      { id: 't4', type: 'deposit', amount: 100, date: '2024-03-05', description: 'Challenge reward' },
-      { id: 't5', type: 'withdrawal', amount: -25, date: '2024-03-01', description: 'Challenge entry fee' }
-    ]
-  }
+  transactions: [
+    { id: 't1', type: 'deposit', amount: 50, date: '2024-03-20', description: 'Challenge reward' },
+    { id: 't2', type: 'deposit', amount: 75, date: '2024-03-15', description: 'Challenge reward' },
+    { id: 't3', type: 'withdrawal', amount: -30, date: '2024-03-10', description: 'Challenge entry fee' },
+    { id: 't4', type: 'deposit', amount: 100, date: '2024-03-05', description: 'Challenge reward' },
+    { id: 't5', type: 'withdrawal', amount: -25, date: '2024-03-01', description: 'Challenge entry fee' }
+  ]
 };
 
 export default function Profile() {
@@ -58,7 +56,7 @@ export default function Profile() {
       case 'transactions':
         return (
           <View style={styles.tabContent}>
-            {user.wallet.transactions.map(transaction => (
+            {user.transactions.map(transaction => (
               <View key={transaction.id} style={styles.transactionItem}>
                 <View style={[
                   styles.transactionIcon, 
@@ -82,6 +80,49 @@ export default function Profile() {
                 </Text>
               </View>
             ))}
+          </View>
+        );
+      case 'wallet':
+        return (
+          <View style={styles.tabContent}>
+            <View style={styles.walletConnectContainer}>
+              <View style={styles.walletIconContainer}>
+                <Ionicons name="wallet-outline" size={48} color={OnboardingColors.accentColor} />
+              </View>
+              <Text style={styles.walletConnectTitle}>Connect Your Wallet</Text>
+              <Text style={styles.walletConnectDescription}>
+                Connect your Solana wallet to participate in challenges and earn rewards.
+              </Text>
+              <View style={styles.walletOptionsContainer}>
+                <TouchableOpacity style={styles.walletOption} onPress={() => console.log('Connect Phantom')}>
+                  <Image 
+                    source={{ uri: 'https://phantom.app/img/phantom-logo.svg' }} 
+                    style={styles.walletLogo} 
+                  />
+                  <Text style={styles.walletName}>Phantom</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.walletOption} onPress={() => console.log('Connect Backpack')}>
+                  <Image 
+                    source={{ uri: 'https://backpack.app/assets/backpack-logo.svg' }} 
+                    style={styles.walletLogo} 
+                  />
+                  <Text style={styles.walletName}>Backpack</Text>
+                </TouchableOpacity>
+              </View>
+              <TouchableOpacity 
+                style={styles.connectButton}
+                onPress={() => router.push('/wallet')}
+              >
+                <LinearGradient
+                  colors={[OnboardingColors.accentColor, OnboardingColors.accentSecondary]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.gradientButton}
+                >
+                  <Text style={styles.connectButtonText}>Connect Wallet</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
           </View>
         );
       default:
@@ -122,22 +163,6 @@ export default function Profile() {
           </View>
         </View>
 
-        {/* Wallet Card */}
-        <View style={styles.walletCard}>
-          <LinearGradient
-            colors={['#2C3E50', '#4CA1AF']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.walletGradient}
-          >
-            <View style={styles.walletHeader}>
-              <Text style={styles.walletTitle}>Wallet Balance</Text>
-              <Ionicons name="wallet-outline" size={24} color="#FFD700" />
-            </View>
-            <Text style={styles.walletBalance}>{user.wallet.balance} SOL</Text>
-          </LinearGradient>
-        </View>
-
         {/* Tabs */}
         <View style={styles.tabsContainer}>
           <TouchableOpacity
@@ -156,6 +181,14 @@ export default function Profile() {
               Transactions
             </Text>
           </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.tab, activeTab === 'wallet' && styles.activeTab]}
+            onPress={() => setActiveTab('wallet')}
+          >
+            <Text style={[styles.tabText, activeTab === 'wallet' && styles.activeTabText]}>
+              Wallet
+            </Text>
+          </TouchableOpacity>
         </View>
 
         {/* Tab Content */}
@@ -171,16 +204,17 @@ const styles = StyleSheet.create({
     backgroundColor: HomeColors.background,
   },
   safeAreaTop: {
-    height: 100,
+    height: 50,
     backgroundColor: HomeColors.background,
   },
   scrollView: {
     flex: 1,
   },
   coverContainer: {
-    height: 200,
+    height: 180,
     position: 'relative',
     backgroundColor: HomeColors.challengeCard,
+    marginTop: 20,
   },
   coverImage: {
     width: '100%',
@@ -196,18 +230,18 @@ const styles = StyleSheet.create({
   },
   profileInfo: {
     position: 'absolute',
-    bottom: 20,
+    bottom: -60,
     left: 0,
     right: 0,
     alignItems: 'center',
   },
   avatar: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    borderWidth: 3,
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    borderWidth: 4,
     borderColor: HomeColors.background,
-    marginBottom: 10,
+    marginBottom: 15,
   },
   name: {
     fontSize: 24,
@@ -230,7 +264,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     backgroundColor: HomeColors.challengeCard,
     marginHorizontal: 15,
-    marginTop: 15,
+    marginTop: 70,
     borderRadius: 10,
     padding: 15,
     justifyContent: 'space-around',
@@ -258,36 +292,6 @@ const styles = StyleSheet.create({
   statLabel: {
     fontSize: 14,
     color: 'rgba(255, 255, 255, 0.7)',
-  },
-  walletCard: {
-    marginHorizontal: 15,
-    marginTop: 15,
-    borderRadius: 10,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  walletGradient: {
-    padding: 15,
-  },
-  walletHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  walletTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#fff',
-  },
-  walletBalance: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#fff',
   },
   tabsContainer: {
     flexDirection: 'row',
@@ -375,6 +379,73 @@ const styles = StyleSheet.create({
     color: 'rgba(255, 255, 255, 0.6)',
   },
   transactionAmount: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  walletConnectContainer: {
+    backgroundColor: HomeColors.challengeCard,
+    borderRadius: 10,
+    padding: 20,
+    alignItems: 'center',
+  },
+  walletIconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: 'rgba(255, 87, 87, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  walletConnectTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: 10,
+  },
+  walletConnectDescription: {
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.7)',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  walletOptionsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '100%',
+    marginBottom: 20,
+  },
+  walletOption: {
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    padding: 15,
+    borderRadius: 10,
+    width: '45%',
+  },
+  walletLogo: {
+    width: 40,
+    height: 40,
+    marginBottom: 10,
+  },
+  walletName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#fff',
+  },
+  connectButton: {
+    width: '100%',
+    height: 50,
+    borderRadius: 25,
+    overflow: 'hidden',
+    marginTop: 10,
+  },
+  gradientButton: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  connectButtonText: {
+    color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
   },
