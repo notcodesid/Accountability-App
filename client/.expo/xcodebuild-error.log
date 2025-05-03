@@ -1,0 +1,10 @@
+--- xcodebuild: WARNING: Using the first of multiple matching destinations:
+{ platform:iOS Simulator, arch:arm64, id:079ED029-853C-440B-A03B-89E19F2500F4, OS:18.3.1, name:iPhone 16 Pro }
+{ platform:iOS Simulator, arch:x86_64, id:079ED029-853C-440B-A03B-89E19F2500F4, OS:18.3.1, name:iPhone 16 Pro }
+** BUILD FAILED **
+
+
+The following build commands failed:
+	CompileC /Users/siddharth/Library/Developer/Xcode/DerivedData/client-cxjcntodiblwcnccyndnoffysawf/Build/Intermediates.noindex/Pods.build/Debug-iphonesimulator/ReactCommon.build/Objects-normal/arm64/TurboCxxModule.o /Users/siddharth/projects/Accountability-App/client/node_modules/react-native/ReactCommon/react/nativemodule/core/ReactCommon/TurboCxxModule.cpp normal arm64 c++ com.apple.compilers.llvm.clang.1_0.compiler (in target 'ReactCommon' from project 'Pods')
+	Building workspace client with scheme client and configuration Debug
+(2 failures)

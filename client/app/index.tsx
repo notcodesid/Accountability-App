@@ -3,16 +3,14 @@ import {
   StyleSheet,
   Text,
   View,
-  TouchableOpacity,
   StatusBar,
   Dimensions,
   ImageBackground,
   Animated,
 } from 'react-native';
 import { OnboardingColors } from '../constants/Colors';
-import { LinearGradient } from 'expo-linear-gradient';
-import GoogleIcon from '../assets/customIocn';
 import { useRouter } from 'expo-router';
+import GoogleAuthButton from '../components/GoogleAuthButton';
 
 export default function WelcomeScreen() {
   const router = useRouter();
@@ -36,12 +34,6 @@ export default function WelcomeScreen() {
       }),
     ]).start();
   }, []);
-
-  const handleGoogleAuth = () => {
-    console.log('Google auth initiated');
-    // After successful Google login logic (if any)
-    router.replace('/(tabs)'); // or router.push('/'), depending on your use case
-  };
 
   return (
     <View style={styles.container}>
@@ -87,20 +79,8 @@ export default function WelcomeScreen() {
               and make success a habit.
             </Text>
           </View>
-
-          <TouchableOpacity style={styles.buttonPrimary} onPress={handleGoogleAuth}>
-            <LinearGradient
-              colors={[OnboardingColors.accentColor, OnboardingColors.accentSecondary]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.gradientButton}
-            >
-              <View style={styles.googleButtonInner}>
-                <GoogleIcon />
-                <Text style={styles.buttonPrimaryText}>Continue with Google</Text>
-              </View>
-            </LinearGradient>
-          </TouchableOpacity>
+          {/* Google Auth Button */}
+          <GoogleAuthButton />
         </Animated.View>
 
         <Animated.View style={[styles.termsContainer, { opacity: fadeAnim }]}>
@@ -162,28 +142,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 24,
     marginBottom: 30,
-  },
-  buttonPrimary: {
-    borderRadius: 30,
-    height: 56,
-    marginBottom: 15,
-    overflow: 'hidden',
-  },
-  gradientButton: {
-    width: '100%',
-    height: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  googleButtonInner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  buttonPrimaryText: {
-    color: OnboardingColors.buttonText,
-    fontSize: 18,
-    fontWeight: '600',
   },
   termsContainer: {
     alignItems: 'center',
