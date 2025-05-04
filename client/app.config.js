@@ -7,7 +7,7 @@ export default {
     version: "1.0.0",
     orientation: "portrait",
     icon: "./assets/images/icon.png",
-    scheme: "myapp",
+    scheme: "client", 
     userInterfaceStyle: "automatic",
     newArchEnabled: true,
     ios: {
@@ -48,7 +48,6 @@ export default {
       eas: {
         projectId: "d7edeea5-ff6c-4ebe-af49-a0de3d588272"
       },
-      // Add environment variables
       ios_client: process.env.ios_client,
       web_client: process.env.web_client,
       android_client: process.env.android_client
