@@ -1,3 +1,3 @@
 ## lockin
 
-![App Screenshot](./client/image.png)
+<img src="./client/image.png" alt="App Screenshot" width="400"/>
